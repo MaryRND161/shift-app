@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сдача смены</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: var(--tg-theme-bg-color, #f4f6f8);
+      --text-color: var(--tg-theme-text-color, #222);
+      --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+      --hint-color: var(--tg-theme-hint-color, #888);
+      --button-color: var(--tg-theme-button-color, #2481cc);
+      --button-text: var(--tg-theme-button-text-color, #ffffff);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--hint-color);
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 8px;
+    }
+    input, textarea, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      font-size: 16px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      outline: none;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .status-group {
+      display: flex;
+      gap: 8px;
+    }
+    .status-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: var(--bg-color);
+      color: var(--text-color);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .status-btn.active {
+      background: var(--button-color);
+      color: var(--button-text);
+      border-color: var(--button-color);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <label for="buffer">Остаток в буфере (заказы / места)</label>
+    <input type="number" id="buffer" placeholder="0" min="0">
+  </div>
+
+  <div class="card">
+    <label>Статус оборудования</label>
+    <div class="status-group">
+      <button type="button" class="status-btn active" id="btn-ok" onclick="setStatus('Все в норме')">✅ Все в норме</button>
+      <button type="button" class="status-btn" id="btn-issues" onclick="setStatus('Есть дефекты/недостачи')">⚠️ Есть проблемы</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label for="incidents">Проблемы и инциденты за смену</label>
+    <textarea id="incidents" placeholder="Опишите неисправности или напишите 'нет'..."></textarea>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    let currentEquipmentStatus = "Все в норме";
+
+    function setStatus(status) {
+      currentEquipmentStatus = status;
+      document.getElementById('btn-ok').classList.toggle('active', status === 'Все в норме');
+      document.getElementById('btn-issues').classList.toggle('active', status !== 'Все в норме');
+    }
+
+    // Настраиваем главную кнопку внизу Telegram
+    tg.MainButton.text = "Сдать смену";
+    tg.MainButton.show();
+
+    tg.MainButton.onClick(() => {
+      const buffer = document.getElementById('buffer').value;
+      const incidents = document.getElementById('incidents').value || "Нет";
+
+      if (!buffer || buffer < 0) {
+        tg.showAlert("Пожалуйста, укажите количество заказов в буфере.");
+        return;
+      }
+
+      const payload = {
+        buffer_count: parseInt(buffer, 10),
+        equipment_status: currentEquipmentStatus,
+        incidents: incidents
+      };
+
+      // Отправляем JSON обратно в бота
+      tg.sendData(JSON.stringify(payload));
+    });
+  </script>
+</body>
+</html>
