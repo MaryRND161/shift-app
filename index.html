@@ -2,95 +2,272 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Сдача смены</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Сдача смены ПВЗ</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg-color: var(--tg-theme-bg-color, #f4f6f8);
-      --text-color: var(--tg-theme-text-color, #222);
-      --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
-      --hint-color: var(--tg-theme-hint-color, #888);
-      --button-color: var(--tg-theme-button-color, #2481cc);
-      --button-text: var(--tg-theme-button-text-color, #ffffff);
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-color: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.3);
+      --success-color: #10b981;
+      --danger-color: #ef4444;
     }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 16px;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
+
+    body {
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      color: var(--text-main);
       padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      padding-bottom: 90px;
     }
-    label {
+
+    /* Шапка приложения */
+    .app-header {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .app-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-badge {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-color);
       font-size: 13px;
       font-weight: 600;
-      color: var(--hint-color);
+      padding: 6px 10px;
+      border-radius: 10px;
+    }
+
+    /* Карточки */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.4s ease-out;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
       text-transform: uppercase;
-      display: block;
-      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+      color: var(--accent-color);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    input, textarea, select {
+
+    /* Поле ввода */
+    input[type="number"], textarea {
       width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
-      border: 1px solid rgba(0,0,0,0.1);
-      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
       font-size: 16px;
-      background: var(--bg-color);
-      color: var(--text-color);
+      color: var(--text-main);
       outline: none;
+      transition: all 0.2s ease;
     }
+
+    input[type="number"]:focus, textarea:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
     textarea {
       resize: vertical;
       min-height: 80px;
     }
-    .status-group {
+
+    /* Чек-лист с анимированными тумблерами */
+    .checklist {
       display: flex;
-      gap: 8px;
+      flex-direction: column;
+      gap: 12px;
     }
-    .status-btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(0,0,0,0.1);
-      background: var(--bg-color);
-      color: var(--text-color);
-      cursor: pointer;
+
+    .check-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.2s;
+    }
+
+    .check-label {
       font-size: 14px;
       font-weight: 500;
+      color: var(--text-main);
+      padding-right: 12px;
     }
-    .status-btn.active {
-      background: var(--button-color);
-      color: var(--button-text);
-      border-color: var(--button-color);
+
+    /* Переключатель Да/Нет */
+    .switch-container {
+      display: flex;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 2px;
+      position: relative;
+    }
+
+    .switch-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .switch-btn.active-yes {
+      background: var(--success-color);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .switch-btn.active-no {
+      background: var(--danger-color);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <label for="buffer">Остаток в буфере (заказы / места)</label>
-    <input type="number" id="buffer" placeholder="0" min="0">
+  <!-- Шапка -->
+  <div class="app-header">
+    <div class="app-title">📦 ПВЗ: Сдача смены</div>
+    <div class="date-badge" id="current-date">--.--.----</div>
   </div>
 
+  <!-- Блок: Потеряшки -->
   <div class="card">
-    <label>Статус оборудования</label>
-    <div class="status-group">
-      <button type="button" class="status-btn active" id="btn-ok" onclick="setStatus('Все в норме')">✅ Все в норме</button>
-      <button type="button" class="status-btn" id="btn-issues" onclick="setStatus('Есть дефекты/недостачи')">⚠️ Есть проблемы</button>
+    <div class="card-title">🔎 Контроль выдачи</div>
+    <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+      Потеряшки — не выданные клиенту (шт.):
+    </label>
+    <input type="number" id="lost-items" min="0" value="0" placeholder="0">
+  </div>
+
+  <!-- Блок: Чек-лист закрытия смены -->
+  <div class="card">
+    <div class="card-title">✅ Чек-лист проверки смены</div>
+    <div class="checklist">
+      
+      <div class="check-item">
+        <span class="check-label">Уборка в клиентской зоне</span>
+        <div class="switch-container" data-key="clean_client_zone">
+          <button type="button" class="switch-btn active-yes" onclick="setToggle(this, true)">Да</button>
+          <button type="button" class="switch-btn" onclick="setToggle(this, false)">Нет</button>
+        </div>
+      </div>
+
+      <div class="check-item">
+        <span class="check-label">Уборка в складской зоне</span>
+        <div class="switch-container" data-key="clean_warehouse_zone">
+          <button type="button" class="switch-btn active-yes" onclick="setToggle(this, true)">Да</button>
+          <button type="button" class="switch-btn" onclick="setToggle(this, false)">Нет</button>
+        </div>
+      </div>
+
+      <div class="check-item">
+        <span class="check-label">Вынос мусора</span>
+        <div class="switch-container" data-key="trash_removed">
+          <button type="button" class="switch-btn active-yes" onclick="setToggle(this, true)">Да</button>
+          <button type="button" class="switch-btn" onclick="setToggle(this, false)">Нет</button>
+        </div>
+      </div>
+
+      <div class="check-item">
+        <span class="check-label">Наличие неоформленных возвратов</span>
+        <div class="switch-container" data-key="unprocessed_returns">
+          <button type="button" class="switch-btn" onclick="setToggle(this, true)">Да</button>
+          <button type="button" class="switch-btn active-no" onclick="setToggle(this, false)">Нет</button>
+        </div>
+      </div>
+
+      <div class="check-item">
+        <span class="check-label">Неотправленные заказы на складе</span>
+        <div class="switch-container" data-key="unshipped_orders">
+          <button type="button" class="switch-btn" onclick="setToggle(this, true)">Да</button>
+          <button type="button" class="switch-btn active-no" onclick="setToggle(this, false)">Нет</button>
+        </div>
+      </div>
+
+      <div class="check-item">
+        <span class="check-label">Оборудование проверено (сканер, ПК)</span>
+        <div class="switch-container" data-key="equipment_checked">
+          <button type="button" class="switch-btn active-yes" onclick="setToggle(this, true)">Да</button>
+          <button type="button" class="switch-btn" onclick="setToggle(this, false)">Нет</button>
+        </div>
+      </div>
+
+      <div class="check-item">
+        <span class="check-label">Расходники в наличии (пакеты, скотч, маркеры)</span>
+        <div class="switch-container" data-key="consumables_checked">
+          <button type="button" class="switch-btn active-yes" onclick="setToggle(this, true)">Да</button>
+          <button type="button" class="switch-btn" onclick="setToggle(this, false)">Нет</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
+  <!-- Блок: Комментарии / Проблемы -->
   <div class="card">
-    <label for="incidents">Проблемы и инциденты за смену</label>
-    <textarea id="incidents" placeholder="Опишите неисправности или напишите 'нет'..."></textarea>
+    <div class="card-title">💬 Комментарии и инциденты</div>
+    <textarea id="comments" placeholder="Опишите инциденты за день или оставьте 'Все в норме'..."></textarea>
   </div>
 
   <script>
@@ -98,34 +275,68 @@
     tg.ready();
     tg.expand();
 
-    let currentEquipmentStatus = "Все в норме";
+    // Текущая дата в шапке
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("ru-RU", { day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById("current-date").textContent = dateStr;
 
-    function setStatus(status) {
-      currentEquipmentStatus = status;
-      document.getElementById('btn-ok').classList.toggle('active', status === 'Все в норме');
-      document.getElementById('btn-issues').classList.toggle('active', status !== 'Все в норме');
+    // Состояние чек-листа
+    const checklistState = {
+      clean_client_zone: true,
+      clean_warehouse_zone: true,
+      trash_removed: true,
+      unprocessed_returns: false,
+      unshipped_orders: false,
+      equipment_checked: true,
+      consumables_checked: true
+    };
+
+    function setToggle(btn, value) {
+      const container = btn.closest('.switch-container');
+      const key = container.getAttribute('data-key');
+      checklistState[key] = value;
+
+      const buttons = container.querySelectorAll('.switch-btn');
+      buttons.forEach(b => {
+        b.className = 'switch-btn';
+      });
+
+      if (value) {
+        btn.classList.add('active-yes');
+      } else {
+        btn.classList.add('active-no');
+      }
     }
 
-    // Настраиваем главную кнопку внизу Telegram
-    tg.MainButton.text = "Сдать смену";
+    // Главная кнопка Telegram
+    tg.MainButton.setText("Отправить отчет о смене");
     tg.MainButton.show();
 
     tg.MainButton.onClick(() => {
-      const buffer = document.getElementById('buffer').value;
-      const incidents = document.getElementById('incidents').value || "Нет";
-
-      if (!buffer || buffer < 0) {
-        tg.showAlert("Пожалуйста, укажите количество заказов в буфере.");
+      const lostInput = document.getElementById("lost-items").value.trim();
+      
+      // Разрешаем 0, запрещаем пустое поле или отрицательные числа
+      if (lostInput === "" || parseInt(lostInput, 10) < 0 || isNaN(parseInt(lostInput, 10))) {
+        tg.showAlert("Укажите число потеряшек (если их нет, введите 0).");
         return;
       }
 
+      const comments = document.getElementById("comments").value.trim() || "Без замечаний";
+
       const payload = {
-        buffer_count: parseInt(buffer, 10),
-        equipment_status: currentEquipmentStatus,
-        incidents: incidents
+        lost_items_count: parseInt(lostInput, 10),
+        checklist: {
+          "Уборка (клиентская зона)": checklistState.clean_client_zone ? "Да" : "Нет",
+          "Уборка (склад)": checklistState.clean_warehouse_zone ? "Да" : "Нет",
+          "Вынос мусора": checklistState.trash_removed ? "Да" : "Нет",
+          "Неоформленные возвраты": checklistState.unprocessed_returns ? "Да" : "Нет",
+          "Неотправленные заказы": checklistState.unshipped_orders ? "Да" : "Нет",
+          "Оборудование (сканер/ПК)": checklistState.equipment_checked ? "Да" : "Нет",
+          "Расходники (пакеты/скотч)": checklistState.consumables_checked ? "Да" : "Нет"
+        },
+        comments: comments
       };
 
-      // Отправляем JSON обратно в бота
       tg.sendData(JSON.stringify(payload));
     });
   </script>
