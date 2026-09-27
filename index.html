@@ -5,183 +5,170 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Сдача смены ПВЗ</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root {
-      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-      --card-bg: rgba(255, 255, 255, 0.08);
-      --card-border: rgba(255, 255, 255, 0.12);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-color: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.3);
-      --success-color: #10b981;
-      --danger-color: #ef4444;
-    }
+ <style>
+  :root {
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --card-bg: rgba(255, 255, 255, 0.82);
+    --card-border: rgba(255, 255, 255, 0.6);
+    --accent-color: #0284c7;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+  }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-    body {
-      background: var(--bg-gradient);
-      min-height: 100vh;
-      color: var(--text-main);
-      padding: 16px;
-      padding-bottom: 90px;
-    }
+  body {
+    /* Точный яркий небесно-голубой градиент из скриншота */
+    background-color: #00a2ff;
+    background-image: 
+      /* Осенний лист в правом нижнем углу */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' width='160' height='160'%3E%3Cpath d='M100 10 C120 40 140 30 160 50 C150 70 180 80 185 105 C165 110 170 135 150 150 C135 140 125 155 115 170 L105 195 L95 195 L95 165 C80 150 70 135 50 145 C35 125 45 105 25 100 C35 75 60 70 50 50 C70 35 85 45 100 10 Z' fill='%23ff6b00' fill-opacity='0.9' /%3E%3Cpath d='M95 165 Q100 90 100 10' stroke='%23e05300' stroke-width='3' fill='none'/%3E%3C/svg%3E"),
+      /* Белый полупрозрачный символ календаря по центру вместо сердца */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='180' height='180'%3E%3Cpath fill='white' fill-opacity='0.35' d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z'/%3E%3C/svg%3E"),
+      /* Нижняя мягкая подсветка градиента */
+      linear-gradient(180deg, #009bf9 0%, #009bf9 60%, #8ed6ff 100%);
+    background-repeat: no-repeat, no-repeat, no-repeat;
+    background-position: right -15px bottom 40px, center 35%, center center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: var(--text-main);
+    padding: 16px;
+    padding-bottom: 90px;
+  }
 
-    /* Шапка приложения */
-    .app-header {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      animation: fadeIn 0.5s ease-out;
-    }
+  /* Шапка приложения под светлый стеклянный стиль */
+  .app-header {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 16px rgba(0, 100, 200, 0.12);
+  }
 
-    .app-title {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+  .app-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0c4a6e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-    .date-badge {
-      background: rgba(56, 189, 248, 0.15);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: var(--accent-color);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 6px 10px;
-      border-radius: 10px;
-    }
+  .date-badge {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 10px;
+  }
 
-    /* Карточки */
-    .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-      animation: slideUp 0.4s ease-out;
-    }
+  /* Карточки с эффектом матового стекла (Frosted Glass) */
+  .card {
+    background: var(--card-bg);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(0, 70, 150, 0.08);
+  }
 
-    .card-title {
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--accent-color);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent-color);
+    margin-bottom: 12px;
+  }
 
-    /* Поле ввода */
-    input[type="number"], textarea {
-      width: 100%;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 16px;
-      color: var(--text-main);
-      outline: none;
-      transition: all 0.2s ease;
-    }
+  input[type="number"], textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(2, 132, 199, 0.2);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 16px;
+    color: var(--text-main);
+    outline: none;
+  }
 
-    input[type="number"]:focus, textarea:focus {
-      border-color: var(--accent-color);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
+  input[type="number"]:focus, textarea:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+  }
 
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
+  textarea {
+    resize: vertical;
+    min-height: 75px;
+  }
 
-    /* Чек-лист с анимированными тумблерами */
-    .checklist {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+  /* Чек-лист с элементами */
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
-    .check-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      background: rgba(15, 23, 42, 0.4);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: background 0.2s;
-    }
+  .check-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.65);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+  }
 
-    .check-label {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-main);
-      padding-right: 12px;
-    }
+  .check-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1e293b;
+    padding-right: 10px;
+  }
 
-    /* Переключатель Да/Нет */
-    .switch-container {
-      display: flex;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 2px;
-      position: relative;
-    }
+  .switch-container {
+    display: flex;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+    padding: 2px;
+  }
 
-    .switch-btn {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 6px;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+  .switch-btn {
+    padding: 5px 12px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
 
-    .switch-btn.active-yes {
-      background: var(--success-color);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
-    }
+  .switch-btn.active-yes {
+    background: var(--success-color);
+    color: #fff;
+  }
 
-    .switch-btn.active-no {
-      background: var(--danger-color);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+  .switch-btn.active-no {
+    background: var(--danger-color);
+    color: #fff;
+  }
+</style>
 </head>
 <body>
 
