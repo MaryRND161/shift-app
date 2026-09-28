@@ -686,17 +686,21 @@
         comments: document.getElementById('comments').value.trim() || "Без замечаний"
       };
 
-  tg.showConfirm("Подтвердить отправку отчета о сдаче смены?", (ok) => {
-    if (ok) {
-      tg.sendData(JSON.stringify(payload));
+      tg.showConfirm("Подтвердить отправку отчета о сдаче смены?", (ok) => {
+        if (ok) {
+          try {
+            tg.sendData(JSON.stringify(payload));
+          } catch (err) {
+            tg.showAlert("Ошибка отправки: " + err);
+          }
+        }
+      });
     }
-  });
-}
 
         // 9. Вызов команд Telegram
     function triggerBotCommand(cmd) {
-      tg.sendData(JSON.stringify({ action: "command", command: cmd }));
-      tg.close();
+      const payload = { action: "command", command: cmd };
+      tg.sendData(JSON.stringify(payload));
     }
   </script>
 </body>
