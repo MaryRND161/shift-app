@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ПВЗ Portal</title>
+  <title>Мой маркетплейс</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
       --primary-blue: #009bf9;
       --accent-color: #0284c7;
-      --card-bg: rgba(255, 255, 255, 0.88);
+      --card-bg: rgba(255, 255, 255, 0.9);
       --card-border: rgba(255, 255, 255, 0.6);
       --text-main: #0f172a;
       --text-muted: #64748b;
@@ -39,7 +39,7 @@
       padding-bottom: 90px;
     }
 
-    /* Анимированная заставка (Splash Screen) */
+    /* Заставка (Splash Screen) */
     #splash {
       position: fixed;
       inset: 0;
@@ -60,7 +60,7 @@
 
     .splash-title {
       color: #fff;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
       margin-top: 16px;
       letter-spacing: 0.5px;
@@ -71,14 +71,14 @@
       50% { transform: scale(1.1); opacity: 1; }
     }
 
-    /* Фиксированный Header */
+    /* Header */
     .app-header {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       height: 60px;
-      background: rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--card-border);
@@ -92,12 +92,12 @@
     .user-info {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .user-avatar {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: var(--accent-color);
       color: #fff;
@@ -105,7 +105,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .user-name {
@@ -123,14 +123,14 @@
       border-radius: 8px;
     }
 
-    /* Фиксированный Footer (Навигация) */
+    /* Footer (Навигация) */
     .app-footer {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       height: 70px;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid var(--card-border);
@@ -160,18 +160,13 @@
       width: 24px;
       height: 24px;
       fill: currentColor;
-      transition: transform 0.2s ease;
     }
 
     .nav-btn.active {
       color: var(--accent-color);
     }
 
-    .nav-btn.active svg {
-      transform: translateY(-2px);
-    }
-
-    /* Экраны страниц */
+    /* Вкладки */
     .tab-content {
       display: none;
       padding: 16px;
@@ -187,7 +182,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Стили элементов интерфейса */
     .card {
       background: var(--card-bg);
       backdrop-filter: blur(14px);
@@ -195,7 +189,7 @@
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 14px;
-      box-shadow: 0 4px 16px rgba(0, 50, 120, 0.06);
+      box-shadow: 0 4px 16px rgba(0, 50, 120, 0.08);
     }
 
     .card-title {
@@ -221,7 +215,7 @@
     .photo-upload-box {
       border: 2px dashed rgba(2, 132, 199, 0.4);
       border-radius: 12px;
-      padding: 18px;
+      padding: 16px;
       text-align: center;
       background: rgba(255, 255, 255, 0.6);
       cursor: pointer;
@@ -246,14 +240,14 @@
       justify-content: space-between;
       align-items: center;
       padding: 8px 10px;
-      background: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.65);
       border-radius: 10px;
       margin-bottom: 8px;
     }
 
     .switch-container {
       display: flex;
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(0, 0, 0, 0.06);
       border-radius: 6px;
       padding: 2px;
     }
@@ -296,6 +290,74 @@
       box-shadow: none;
       margin-top: 10px;
     }
+
+    /* Стили встроенного календаря */
+    .week-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .week-btn {
+      flex: 1;
+      padding: 10px 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(2, 132, 199, 0.2);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .week-btn.active {
+      background: var(--accent-color);
+      color: #fff;
+      border-color: var(--accent-color);
+    }
+
+    .calendar-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .calendar-slot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .calendar-slot.selected {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--success);
+    }
+
+    .calendar-slot .day-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .calendar-slot .day-status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text-muted);
+    }
+
+    .calendar-slot.selected .day-status {
+      background: var(--success);
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -305,7 +367,7 @@
     <svg class="splash-logo" viewBox="0 0 24 24" fill="#ffffff">
       <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z"/>
     </svg>
-    <div class="splash-title">ПВЗ Управление</div>
+    <div class="splash-title">Мой маркетплейс</div>
   </div>
 
   <!-- Header -->
@@ -353,7 +415,7 @@
       <div class="check-item">
         <span style="font-size:13px;">Неоформленные возвраты</span>
         <div class="switch-container" data-key="returns">
-          <button type="button" class="switch-btn" onclick="setToggle(this, true)">Да</button>
+          <button type="button" class="switch-btn onclick="setToggle(this, true)">Да</button>
           <button type="button" class="switch-btn active-no" onclick="setToggle(this, false)">Нет</button>
         </div>
       </div>
@@ -380,7 +442,6 @@
       </div>
     </div>
 
-    <!-- Загрузка / Съёмка фото -->
     <div class="card">
       <div class="card-title">📸 Фотофиксация порядка</div>
       <label class="photo-upload-box" for="photo-file">
@@ -406,7 +467,7 @@
     <div class="card" style="text-align: center; padding: 24px 16px;">
       <div class="card-title" style="justify-content: center;">🤝 Передача смены</div>
       <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
-        Для очной приемки смены с фотоотчетом предыдущего коллеги нажмите кнопку ниже:
+        Для очной приемки смены с фотографией и чек-листом сменщика нажмите кнопку ниже:
       </p>
       <button type="button" class="action-btn" onclick="triggerBotCommand('/takeover')">
         🔍 Проверить и принять смену
@@ -414,26 +475,28 @@
     </div>
   </main>
 
-  <!-- ВКЛАДКА 3: РАСПИСАНИЕ -->
+  <!-- ВКЛАДКА 3: ВСТРОЕННОЕ РАСПИСАНИЕ -->
   <main id="tab-schedule" class="tab-content">
     <div class="card">
-      <div class="card-title">🗓 Бронирование смен</div>
-      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-        Выберите подходящие дни дежурств на предстоящие недели через интерактивный календарь:
-      </p>
-      <button type="button" class="action-btn" onclick="triggerBotCommand('/schedule')">
-        ✍️ Заполнить мой график
-      </button>
+      <div class="card-title">📅 Бронирование смен на неделю</div>
+      <div class="week-selector">
+        <button type="button" class="week-btn active" id="btn-week-1" onclick="changeWeek(1)">След. неделя</button>
+        <button type="button" class="week-btn" id="btn-week-2" onclick="changeWeek(2)">Через неделю</button>
+      </div>
+
+      <!-- Сетка календаря -->
+      <div class="calendar-grid" id="calendar-grid">
+        <!-- Генерируется динамически через JS -->
+      </div>
+
+      <button type="button" class="action-btn" onclick="submitSchedule()">📨 Отправить график на согласование</button>
     </div>
 
     <div class="card">
       <div class="card-title">📊 Сводная шахматка команды</div>
-      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-        Просмотр утвержденного графика смен всех сотрудников в Google Sheets:
-      </p>
-      <!-- Вставьте вашу ссылку на таблицу ниже -->
+      <!-- Замените ВАШ_ID_ТАБЛИЦЫ на реальный ID из адресной строки Google Sheets -->
       <a href="https://docs.google.com/spreadsheets/d/ВАШ_ID_ТАБЛИЦЫ/edit" target="_blank" class="action-btn secondary-btn">
-        👀 Посмотреть шахматку смен
+        👀 Посмотреть шахматку в Google Таблице
       </a>
       <a href="https://docs.google.com/spreadsheets/d/ВАШ_ID_ТАБЛИЦЫ/export?format=pdf" target="_blank" class="action-btn secondary-btn">
         📥 Скачать расписание (PDF)
@@ -445,15 +508,15 @@
   <nav class="app-footer">
     <button class="nav-btn active" onclick="switchTab('handover', this)">
       <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
-      Сдать
+      Сдать смену
     </button>
     <button class="nav-btn" onclick="switchTab('takeover', this)">
       <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-      Принять
+      Принять смену
     </button>
     <button class="nav-btn" onclick="switchTab('schedule', this)">
       <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z"/></svg>
-      График
+      Расписание
     </button>
   </nav>
 
@@ -462,13 +525,14 @@
     tg.ready();
     tg.expand();
 
-    // 1. Анимация заставки (Splash Screen)
+    // 1. Splash Screen
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const splash = document.getElementById('splash');
         splash.style.opacity = '0';
         setTimeout(() => splash.style.display = 'none', 500);
       }, 700);
+      renderCalendar();
     });
 
     // 2. Инициализация профиля и даты
@@ -488,7 +552,7 @@
       btn.classList.add('active');
     }
 
-    // 4. Логика тумблеров чек-листа
+    // 4. Чек-лист
     const checklist = {
       clean_client: true, clean_warehouse: true, trash: true,
       returns: false, unshipped: false, equipment: true, consumables: true
@@ -502,7 +566,7 @@
       btn.classList.add(val ? 'active-yes' : 'active-no');
     }
 
-    // 5. Обработка локального фото
+    // 5. Обработка фото
     let capturedPhotoBase64 = null;
     function handlePhotoUpload(input) {
       if (input.files && input.files[0]) {
@@ -519,21 +583,96 @@
       }
     }
 
-    // 6. Отправка команды боту из вкладки
+    // 6. Логика встроенного календаря
+    const RU_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+    let currentWeekOffset = 1;
+    let selectedCalendarSlots = [];
+
+    function changeWeek(offset) {
+      currentWeekOffset = offset;
+      document.getElementById('btn-week-1').classList.toggle('active', offset === 1);
+      document.getElementById('btn-week-2').classList.toggle('active', offset === 2);
+      selectedCalendarSlots = [];
+      renderCalendar();
+    }
+
+    function getWeekDates(offset) {
+      const now = new Date();
+      const currentDay = (now.getDay() + 6) % 7; // Понедельник = 0
+      const currentMonday = new Date(now);
+      currentMonday.setDate(now.getDate() - currentDay + (offset * 7));
+      
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(currentMonday);
+        d.setDate(currentMonday.getDate() + i);
+        dates.push(d);
+      }
+      return dates;
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+      const dates = getWeekDates(currentWeekOffset);
+
+      dates.forEach((d, idx) => {
+        const dateKey = d.toISOString().split('T')[0];
+        const dayTitle = `${RU_DAYS[idx]} (${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')})`;
+        const isSelected = selectedCalendarSlots.includes(dateKey);
+
+        const slot = document.createElement('div');
+        slot.className = `calendar-slot ${isSelected ? 'selected' : ''}`;
+        slot.onclick = () => toggleSlot(dateKey);
+
+        slot.innerHTML = `
+          <span class="day-title">${dayTitle}</span>
+          <span class="day-status">${isSelected ? '🟢 Беру смену' : '⚪ Свободно'}</span>
+        `;
+        grid.appendChild(slot);
+      });
+    }
+
+    function toggleSlot(dateKey) {
+      if (selectedCalendarSlots.includes(dateKey)) {
+        selectedCalendarSlots = selectedCalendarSlots.filter(k => k !== dateKey);
+      } else {
+        selectedCalendarSlots.push(dateKey);
+      }
+      renderCalendar();
+    }
+
+    function submitSchedule() {
+      if (selectedCalendarSlots.length === 0) {
+        tg.showAlert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
+        return;
+      }
+
+      const payload = {
+        action: "schedule_submit",
+        week_offset: currentWeekOffset,
+        selected_slots: selectedCalendarSlots
+      };
+
+      tg.sendData(JSON.stringify(payload));
+      tg.close();
+    }
+
+    // 7. Вызов команд Telegram
     function triggerBotCommand(cmd) {
       tg.sendData(JSON.stringify({ action: "command", command: cmd }));
       tg.close();
     }
 
-    // 7. Отправка отчета сдачи смены
+    // 8. Отправка отчета смены
     function submitHandover() {
       const lostInput = document.getElementById('lost-items').value.trim();
       if (lostInput === '' || parseInt(lostInput, 10) < 0) {
-        tg.showAlert('Пожалуйста, укажите число потеряшек (0 допускается).');
+        tg.showAlert('Укажите число потеряшек (0 допускается).');
         return;
       }
       if (!capturedPhotoBase64) {
-        tg.showAlert('Обязательно сделайте или прикрепите фото порядка!');
+        tg.showAlert('Прикрепите фото рабочей зоны перед сдачей смены!');
         return;
       }
 
