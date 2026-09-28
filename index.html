@@ -412,13 +412,13 @@
           <button type="button" class="switch-btn" onclick="setToggle(this, false)">Нет</button>
         </div>
       </div>
-      <div class="check-item">
-        <span style="font-size:13px;">Неоформленные возвраты</span>
-        <div class="switch-container" data-key="returns">
-          <button type="button" class="switch-btn onclick="setToggle(this, true)">Да</button>
-          <button type="button" class="switch-btn active-no" onclick="setToggle(this, false)">Нет</button>
-        </div>
-      </div>
+<div class="check-item">
+  <span style="font-size:13px;">Неоформленные возвраты</span>
+  <div class="switch-container" data-key="returns">
+    <button type="button" class="switch-btn" onclick="setToggle(this, true)">Да</button>
+    <button type="button" class="switch-btn active-no" onclick="setToggle(this, false)">Нет</button>
+  </div>
+</div>
       <div class="check-item">
         <span style="font-size:13px;">Неотправленные заказы</span>
         <div class="switch-container" data-key="unshipped">
@@ -642,65 +642,55 @@
       renderCalendar();
     }
 
-   // Отправка графика без закрытия окна
-function submitSchedule() {
-  if (selectedCalendarSlots.length === 0) {
-    tg.showAlert('Пожалуйста, выберите хотя бы один день для смены!');
-    return;
-  }
+   //7. Отправка графика без закрытия окна
+    function submitSchedule() {
+      if (selectedCalendarSlots.length === 0) {
+        tg.showAlert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
+        return;
+      }
 
-  const payload = {
-    action: "schedule_submit",
-    week_offset: currentWeekOffset,
-    selected_slots: selectedCalendarSlots
-  };
+      const payload = {
+        action: "schedule_submit",
+        week_offset: currentWeekOffset,
+        selected_slots: selectedCalendarSlots
+      };
 
-  tg.sendData(JSON.stringify(payload));
-  tg.showAlert('✅ Ваш график сформирован и направлен руководству на согласование!');
-}
+      // Показываем подтверждение
+      tg.showConfirm("Отправить выбранные дни на согласование?", (ok) => {
+        if (ok) {
+          tg.sendData(JSON.stringify(payload));
+        }
+      });
+    }
 
-// 7. Отправка графика без закрытия окна
-function submitSchedule() {
-  if (selectedCalendarSlots.length === 0) {
-    tg.showAlert('Пожалуйста, выберите хотя бы один день для смены!');
-    return;
-  }
+    //8. Отправка сдачи смены без закрытия окна
+    function submitHandover() {
+      const lostInput = document.getElementById('lost-items').value.trim();
+      if (lostInput === '' || parseInt(lostInput, 10) < 0) {
+        tg.showAlert('Укажите число потеряшек (0 допускается).');
+        return;
+      }
 
-  const payload = {
-    action: "schedule_submit",
-    week_offset: currentWeekOffset,
-    selected_slots: selectedCalendarSlots
-  };
+      const payload = {
+        action: "handover_submit",
+        lost_items_count: parseInt(lostInput, 10),
+        checklist: {
+          "Уборка (клиентская)": checklist.clean_client ? "Да" : "Нет",
+          "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
+          "Вынос мусора": checklist.trash ? "Да" : "Нет",
+          "Неоформл. возвраты": checklist.returns ? "Да" : "Нет",
+          "Неотправл. заказы": checklist.unshipped ? "Да" : "Нет",
+          "Оборудование": checklist.equipment ? "Да" : "Нет",
+          "Расходники": checklist.consumables ? "Да" : "Нет"
+        },
+        comments: document.getElementById('comments').value.trim() || "Без замечаний"
+      };
 
-  tg.sendData(JSON.stringify(payload));
-  tg.showAlert('✅ Ваш график сформирован и направлен руководству на согласование!');
-}
-
-//8. Отправка сдачи смены без закрытия окна
-function submitHandover() {
-  const lostInput = document.getElementById('lost-items').value.trim();
-  if (lostInput === '' || parseInt(lostInput, 10) < 0) {
-    tg.showAlert('Укажите число потеряшек (0 допускается).');
-    return;
-  }
-
-  const payload = {
-    action: "handover_submit",
-    lost_items_count: parseInt(lostInput, 10),
-    checklist: {
-      "Уборка (клиентская)": checklist.clean_client ? "Да" : "Нет",
-      "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
-      "Вынос мусора": checklist.trash ? "Да" : "Нет",
-      "Неоформл. возвраты": checklist.returns ? "Да" : "Нет",
-      "Неотправл. заказы": checklist.unshipped ? "Да" : "Нет",
-      "Оборудование": checklist.equipment ? "Да" : "Нет",
-      "Расходники": checklist.consumables ? "Да" : "Нет"
-    },
-    comments: document.getElementById('comments').value.trim() || "Без замечаний"
-  };
-
-  tg.sendData(JSON.stringify(payload));
-  tg.showAlert('✅ Данные отчета приняты! Бот зафиксировал смену.');
+  tg.showConfirm("Подтвердить отправку отчета о сдаче смены?", (ok) => {
+    if (ok) {
+      tg.sendData(JSON.stringify(payload));
+    }
+  });
 }
 
         // 9. Вызов команд Telegram
