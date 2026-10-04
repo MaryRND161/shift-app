@@ -272,11 +272,9 @@
     </button>
   </nav>
 
-  <script>
-    // ВСТАВЬТЕ СЮДА ВАШ ТОКЕН БОТА:
-    const BOT_TOKEN = "ВАШ_ТОКЕН_БОТА";
-    // ВСТАВЬТЕ ЮЗЕРНЕЙМ ВАШЕГО БОТА (БЕЗ @):
-    const BOT_USERNAME = "ИМЯ_ВАШЕГО_БОТА";
+ <script>
+    // УКАЖИТЕ ТОЧНЫЙ USERNAME ВАШЕГО БОТА БЕЗ ЗНАКА @
+    const BOT_USERNAME = "mpshift_bot";
 
     const tg = window.Telegram.WebApp;
     try {
@@ -291,41 +289,6 @@
     }
     const today = new Date();
     document.getElementById('current-date').textContent = today.toLocaleDateString("ru-RU", { day: 'numeric', month: 'numeric' });
-
-    // Универсальный передатчик: делает прямой fetch и дублирует через sendData
-    async function sendDataToBot(payload) {
-      let sentViaFetch = false;
-      const chatId = user?.id;
-
-      if (chatId && BOT_TOKEN && !BOT_TOKEN.includes("ВАШ_ТОКЕН")) {
-        try {
-          const resp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: "WEBAPP_DATA:" + JSON.stringify(payload)
-            })
-          });
-          const res = await resp.json();
-          if (res.ok) sentViaFetch = true;
-        } catch (e) {
-          console.warn("Fetch failed:", e);
-        }
-      }
-
-      // Если fetch не сработал или chatId не определился, вызываем tg.sendData
-      if (!sentViaFetch) {
-        try {
-          tg.sendData(JSON.stringify(payload));
-          return true;
-        } catch (err) {
-          console.warn("sendData failed:", err);
-          return false;
-        }
-      }
-      return true;
-    }
 
     function switchTab(tabName, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -403,10 +366,19 @@
       });
     }
 
-    // Отправка сдачи смены
-    async function submitHandover() {
-      const btn = document.getElementById('btn-handover');
-      const statusBox = document.getElementById('handover-status');
+    // Передача полезной нагрузки через стандартный переход Telegram
+    function sendPayloadViaLink(payloadObj) {
+      // Сжимаем данные в Base64 URL-safe строку
+      const jsonStr = JSON.stringify(payloadObj);
+      const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+        return String.fromCharCode('0x' + p1);
+      })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+      tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=d_${b64}`);
+    }
+
+    // 1. Отправка отчета сдачи смены
+    function submitHandover() {
       const lostInput = document.getElementById('lost-items').value.trim();
       const barcodesInput = document.getElementById('barcodes-count').value.trim();
 
@@ -419,65 +391,51 @@
         return;
       }
 
-      btn.disabled = true;
-      btn.textContent = "⏳ Отправка...";
-
       const payload = {
-        action: "handover_submit",
-        lost_items_count: parseInt(lostInput, 10),
-        barcodes_count: parseInt(barcodesInput, 10),
-        checklist: {
-          "Уборка (клиентская)": checklist.clean_client ? "Да" : "Нет",
+        act: "handover",
+        lost: parseInt(lostInput, 10),
+        bc: parseInt(barcodesInput, 10),
+        cl: {
+          "Уборка (клиент)": checklist.clean_client ? "Да" : "Нет",
           "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
-          "Вынос мусора": checklist.trash ? "Да" : "Нет",
-          "Неоформл. возвраты": checklist.returns ? "Да" : "Нет",
-          "Неотправл. заказы": checklist.unshipped ? "Да" : "Нет",
+          "Мусор": checklist.trash ? "Да" : "Нет",
+          "Возвраты": checklist.returns ? "Да" : "Нет",
+          "Неотправленные": checklist.unshipped ? "Да" : "Нет",
           "Оборудование": checklist.equipment ? "Да" : "Нет",
           "Расходники": checklist.consumables ? "Да" : "Нет"
         },
-        comments: document.getElementById('comments').value.trim() || "Без замечаний"
+        comm: document.getElementById('comments').value.trim() || "Без замечаний"
       };
 
-      await sendDataToBot(payload);
-      statusBox.style.display = "block";
-      btn.textContent = "✅ Отправлено";
-      setTimeout(() => {
-        btn.disabled = false;
-        btn.textContent = "Отправить смену";
-      }, 4000);
+      sendPayloadViaLink(payload);
     }
 
-    // Отправка расписания
-    async function submitSchedule() {
-      const btn = document.getElementById('btn-schedule');
-      const statusBox = document.getElementById('schedule-status');
-
+    // 2. Отправка графика на согласование
+    function submitSchedule() {
       if (selectedCalendarSlots.length === 0) {
-        alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
+        alert('Пожалуйста, выберите хотя бы один день для смены!');
         return;
       }
 
-      btn.disabled = true;
-      btn.textContent = "⏳ Отправка...";
+      // Передаем номера выбранных дней недели (0-6)
+      const weekDates = getWeekDates(currentWeekOffset);
+      const daysIdx = [];
+      weekDates.forEach((d, idx) => {
+        const key = d.toISOString().split('T')[0];
+        if (selectedCalendarSlots.includes(key)) daysIdx.push(idx);
+      });
 
       const payload = {
-        action: "schedule_submit",
-        week_offset: currentWeekOffset,
-        selected_slots: selectedCalendarSlots
+        act: "sched",
+        wo: currentWeekOffset,
+        days: daysIdx
       };
 
-      await sendDataToBot(payload);
-      statusBox.style.display = "block";
-      btn.textContent = "✅ График отправлен";
-      setTimeout(() => {
-        btn.disabled = false;
-        btn.textContent = "📨 Отправить график на согласование";
-      }, 4000);
+      sendPayloadViaLink(payload);
     }
 
-    // Приемка смены (надежный переход)
+    // 3. Проверить и принять смену
     function requestTakeover() {
-      // Открываем диплинк команды приемки — это сворачивает Mini App и вызывает отчет в чате
       tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=takeover`);
     }
 
