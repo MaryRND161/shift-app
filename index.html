@@ -436,16 +436,14 @@
     }
 
     // 1. СДАЧА СМЕНЫ
-    function submitHandover(btn) {
-      if (!btn) btn = document.getElementById('btn-submit-shift');
+   function submitHandover(btn) {
+      if (!btn) btn = document.getElementById('btn-submit-shift') || document.querySelector('#tab-handover .action-btn');
 
-      // 1. Проверяем фото
       if (!photoAttached) {
         alert('⚠️ Пожалуйста, прикрепите фото рабочей зоны перед сдачей смены!');
         return;
       }
 
-      // 2. Считываем поля
       const lostInput = document.getElementById('lost-items');
       const barcodesInput = document.getElementById('barcodes-count');
       const commentsInput = document.getElementById('comments');
@@ -464,53 +462,47 @@
         checklist.consumables ? 1 : 0
       ].join('');
 
-      const shiftData = {
-        worker: user?.first_name || "Марина",
-        time: new Date().toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' }),
-        bc: barcodesVal,
-        lost: lostVal,
-        comm: commText,
-        accepted: false
-      };
-
-      try {
-        localStorage.setItem('last_submitted_shift', JSON.stringify(shiftData));
-      } catch (e) {}
-
-      if (btn) {
-        btn.textContent = "⏳ Отправка...";
-        btn.style.opacity = "0.7";
-      }
-
+      // Компактный payload: гарантированно умещается в лимит ссылки (до 30 символов)
       const payload = {
         act: "h",
-        l: shiftData.lost,
-        b: shiftData.bc,
+        l: lostVal,
+        b: barcodesVal,
         c: clBits,
-        m: commText
+        m: commText.substring(0, 20)
       };
 
       const jsonStr = JSON.stringify(payload);
+      
+      // Сверхкомпактное кодирование в base64
+      const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+        return String.fromCharCode('0x' + p1);
+      })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-      // Способ 1: Прямая отправка в бот через Telegram WebApp API
+      // 1. Попытка через sendData (для клавиатурных кнопок)
+      let sentViaNative = false;
       try {
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) {
           window.Telegram.WebApp.sendData(jsonStr);
-          return;
+          sentViaNative = true;
         }
-      } catch (err) {
-        console.error("sendData failure", err);
+      } catch (e) {
+        sentViaNative = false;
       }
 
-      // Способ 2: Запасной переход через deep-link, если sendData заблокирован
-      try {
-        const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
-          return String.fromCharCode('0x' + p1);
-        })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        window.location.href = `https://t.me/${BOT_USERNAME}?start=d_${b64}`;
-      } catch (e) {
-        alert("Ошибка отправки данных: " + e.message);
+      // 2. Если sendData не поддерживается в этом режиме — перенаправляем через ссылку и закрываем окно
+      if (!sentViaNative) {
+        const link = `https://t.me/${BOT_USERNAME}?start=d_${b64}`;
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+          window.Telegram.WebApp.openTelegramLink(link);
+        } else {
+          window.location.href = link;
+        }
       }
+
+      // Принудительно закрываем окно Mini App
+      try {
+        window.Telegram.WebApp.close();
+      } catch (e) {}
     }
 
     // 2. ОТПРАВКА ГРАФИКА
