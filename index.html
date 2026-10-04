@@ -293,11 +293,12 @@
   </nav>
 
  <script>
-    // ВСТАВЬТЕ ТОЧНЫЙ USERNAME ВАШЕГО БОТА (БЕЗ @)
     const BOT_USERNAME = "mpshift_bot";
-
     const tg = window.Telegram.WebApp;
-    try { tg.ready(); tg.expand(); } catch (e) {}
+    try { 
+      tg.ready(); 
+      tg.expand(); 
+    } catch (e) {}
 
     const user = tg.initDataUnsafe?.user;
     if (user) {
@@ -329,7 +330,6 @@
       btn.classList.add(val ? 'active-yes' : 'active-no');
     }
 
-// 4. Сдача смены С ОБЯЗАТЕЛЬНЫМ ФОТО
     let photoAttached = false;
     function handlePhotoUpload(input) {
       if (input.files && input.files[0]) {
@@ -338,7 +338,7 @@
       }
     }
 
-    // --- Календарь ---
+    // --- Календарь смен ---
     const RU_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
     let currentWeekOffset = 1;
     let selectedCalendarSlots = [];
@@ -394,11 +394,9 @@
       });
     }
 
-// 2. Открытие редактора с точной синхронизацией
     function openScheduleEditor() {
       document.getElementById('schedule-active-card').style.display = 'none';
       document.getElementById('schedule-editor-card').style.display = 'block';
-
       let savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-08", "2026-10-10", "2026-10-11"]');
       selectedCalendarSlots = [...savedDays];
       renderCalendar();
@@ -409,18 +407,38 @@
       document.getElementById('schedule-active-card').style.display = 'block';
     }
 
-    // Безопасная отправка deep-link
-    function sendPayloadViaLink(payloadObj) {
+    // НАДЁЖНАЯ ГИБРИДНАЯ ОТПРАВКА
+    function sendUniversalPayload(payloadObj) {
       const jsonStr = JSON.stringify(payloadObj);
-      const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
-        return String.fromCharCode('0x' + p1);
-      })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      let sent = false;
 
-      tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=d_${b64}`);
+      // Способ 1: Пытаемся отправить через sendData (если открыто клавиатурой)
+      try {
+        if (tg && typeof tg.sendData === 'function') {
+          tg.sendData(jsonStr);
+          sent = true;
+        }
+      } catch (err) {
+        sent = false;
+      }
+
+      // Способ 2: Запасной гарантированный deep-link (если sendData не поддерживается в режиме WebApp)
+      if (!sent) {
+        try {
+          const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+            return String.fromCharCode('0x' + p1);
+          })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+          tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=d_${b64}`);
+        } catch (e) {
+          window.location.href = `https://t.me/${BOT_USERNAME}`;
+        }
+      }
     }
 
-    // 1. Сдача смены (полная и точная передача без урезания длины)
+    // 1. СДАЧА СМЕНЫ
     function submitHandover() {
+      const btn = event?.target || document.querySelector('#tab-handover .action-btn');
+
       if (!photoAttached) {
         alert('⚠️ Сначала сделайте и прикрепите фото рабочей зоны!');
         return;
@@ -430,8 +448,8 @@
       const barcodesInput = document.getElementById('barcodes-count');
       const commentsInput = document.getElementById('comments');
 
-      const lostVal = lostInput ? parseInt(lostInput.value, 10) : 0;
-      const barcodesVal = barcodesInput ? parseInt(barcodesInput.value, 10) : 0;
+      const lostVal = lostInput ? (parseInt(lostInput.value, 10) || 0) : 0;
+      const barcodesVal = barcodesInput ? (parseInt(barcodesInput.value, 10) || 0) : 0;
       const commText = commentsInput ? commentsInput.value.trim() : "";
 
       const clBits = [
@@ -445,41 +463,51 @@
       ].join('');
 
       const shiftData = {
-        worker: user?.first_name || "Сотрудник",
+        worker: user?.first_name || "Марина",
         time: new Date().toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' }),
-        bc: isNaN(barcodesVal) ? 0 : barcodesVal,
-        lost: isNaN(lostVal) ? 0 : lostVal,
+        bc: barcodesVal,
+        lost: lostVal,
         comm: commText || "Без замечаний",
         accepted: false
       };
 
+      // Сохраняем в localStorage для вкладки "Принять"
       localStorage.setItem('last_submitted_shift', JSON.stringify(shiftData));
 
-      // Формируем полезную нагрузку со всеми полями
+      if (btn) {
+        btn.textContent = "⏳ Отправка отчета...";
+        btn.style.opacity = "0.7";
+      }
+
+      // Компактный payload: l = потеряшки, b = ШК, c = биты чек-листа, m = комментарий
       const payload = {
         act: "h",
         l: shiftData.lost,
         b: shiftData.bc,
         c: clBits,
-        m: shiftData.comm
+        m: commText.substring(0, 30) || "Без замечаний"
       };
 
-      // Отправляем в Telegram
-      sendPayloadViaLink(payload);
+      sendUniversalPayload(payload);
+
+      setTimeout(() => {
+        if (btn) {
+          btn.textContent = "✅ Смена отправлена!";
+          btn.style.background = "var(--success)";
+          btn.style.opacity = "1";
+        }
+      }, 400);
     }
 
     // 2. ОТПРАВКА ГРАФИКА
-    // 3. Отправка графика: сортируем слоты перед отправкой
     function submitSchedule() {
+      const btn = event?.target;
       if (selectedCalendarSlots.length === 0) {
         alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
         return;
       }
 
-      // Сортируем выбранные слоты
       selectedCalendarSlots.sort();
-
-      // Сохраняем в память
       localStorage.setItem('my_approved_days', JSON.stringify(selectedCalendarSlots));
       renderApprovedScheduleCard();
 
@@ -490,14 +518,20 @@
         if (selectedCalendarSlots.includes(key)) daysIdx.push(idx);
       });
 
+      if (btn) btn.textContent = "⏳ Отправка графика...";
+
       const payload = {
         act: "sched",
         wo: currentWeekOffset,
         days: daysIdx
       };
 
-      sendPayloadViaLink(payload);
-      closeScheduleEditor();
+      sendUniversalPayload(payload);
+
+      setTimeout(() => {
+        if (btn) btn.textContent = "✅ График направлен!";
+        closeScheduleEditor();
+      }, 400);
     }
 
     // 3. ПРИЁМКА СМЕНЫ
@@ -517,7 +551,6 @@
         issueComment = text.substring(0, 25);
       }
 
-      // Обновляем статус в карточке на экране
       const rawData = localStorage.getItem('last_submitted_shift');
       if (rawData) {
         const shift = JSON.parse(rawData);
@@ -533,10 +566,9 @@
         iss: issueComment
       };
 
-      sendPayloadViaLink(payload);
+      sendUniversalPayload(payload);
     }
 
-    // Отрисовка карточки приёмщика
     function renderTakeoverCard() {
       const rawData = localStorage.getItem('last_submitted_shift');
       const workerEl = document.getElementById('to-worker-name');
@@ -548,9 +580,8 @@
       const actionsBlock = document.getElementById('takeover-actions-block');
 
       if (!rawData) return;
-
       const shift = JSON.parse(rawData);
-      if (workerEl) workerEl.textContent = shift.worker || "Сотрудник";
+      if (workerEl) workerEl.textContent = shift.worker || "Марина";
       if (timeEl) timeEl.textContent = `Сегодня, ${shift.time}`;
       if (bcEl) bcEl.textContent = shift.bc || "0";
       if (lostEl) lostEl.textContent = shift.lost || "0";
@@ -571,14 +602,11 @@
       }
     }
 
-// 1. Хронологическая сортировка и отрисовка согласованных смен
     function renderApprovedScheduleCard() {
       const container = document.getElementById('approved-days-container');
       if (!container) return;
 
       let savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-08", "2026-10-10", "2026-10-11"]');
-
-      // СТРОГАЯ СОРТИРОВКА ПО ВОЗРАСТАНИЮ ДАТЫ (Пн -> Вс)
       savedDays.sort();
 
       const dayNames = {
@@ -587,21 +615,18 @@
       };
 
       container.innerHTML = '';
-      if (savedDays.length === 0) {
-        container.innerHTML = '<div><i>Нет согласованных смен</i></div>';
-      } else {
-        savedDays.forEach(dateStr => {
-          const title = dayNames[dateStr] || dateStr;
-          const row = document.createElement('div');
-          row.innerHTML = `🟢 <b>${title}</b> — Смена (12 ч)`;
-          container.appendChild(row);
-        });
-      }
+      savedDays.forEach(dateStr => {
+        const title = dayNames[dateStr] || dateStr;
+        const row = document.createElement('div');
+        row.innerHTML = `🟢 <b>${title}</b> — Смена (12 ч)`;
+        container.appendChild(row);
+      });
     }
 
     renderCalendar();
     renderApprovedScheduleCard();
     renderTakeoverCard();
   </script>
+  
 </body>
 </html>
