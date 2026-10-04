@@ -17,14 +17,7 @@
       --danger: #ef4444;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     body {
       background-color: var(--primary-blue);
       background-image: 
@@ -46,19 +39,10 @@
       display: flex; justify-content: space-between; align-items: center;
       padding: 0 16px; z-index: 100;
     }
-
     .user-info { display: flex; align-items: center; gap: 10px; }
-    .user-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: var(--accent-color); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 15px;
-    }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-color); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }
     .user-name { font-size: 14px; font-weight: 600; }
-    .date-badge {
-      background: rgba(2, 132, 199, 0.12); color: var(--accent-color);
-      font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 8px;
-    }
+    .date-badge { background: rgba(2, 132, 199, 0.12); color: var(--accent-color); font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 8px; }
 
     .app-footer {
       position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
@@ -67,71 +51,37 @@
       display: flex; justify-content: space-around; align-items: center;
       z-index: 100;
     }
-
-    .nav-btn {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      background: none; border: none; color: var(--text-muted);
-      cursor: pointer; font-size: 11px; font-weight: 600; width: 30%;
-    }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: 600; width: 30%; }
     .nav-btn svg { width: 22px; height: 22px; fill: currentColor; }
     .nav-btn.active { color: var(--accent-color); }
 
     .tab-content { display: none; padding: 16px; }
     .tab-content.active { display: block; }
+    .card { background: var(--card-bg); backdrop-filter: blur(14px); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0, 50, 120, 0.08); }
+    .card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-color); margin-bottom: 10px; }
 
-    .card {
-      background: var(--card-bg); backdrop-filter: blur(14px);
-      border: 1px solid var(--card-border); border-radius: 16px;
-      padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0, 50, 120, 0.08);
-    }
-    .card-title {
-      font-size: 12px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.5px; color: var(--accent-color); margin-bottom: 10px;
-    }
+    input[type="number"], textarea { width: 100%; background: #fff; border: 1px solid rgba(2, 132, 199, 0.2); border-radius: 10px; padding: 12px; font-size: 15px; outline: none; }
 
-    input[type="number"], textarea {
-      width: 100%; background: #fff; border: 1px solid rgba(2, 132, 199, 0.2);
-      border-radius: 10px; padding: 12px; font-size: 15px; outline: none;
-    }
-
-    .check-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 10px; background: rgba(255, 255, 255, 0.65);
-      border-radius: 10px; margin-bottom: 8px;
-    }
+    .check-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(255, 255, 255, 0.65); border-radius: 10px; margin-bottom: 8px; }
     .switch-container { display: flex; background: rgba(0, 0, 0, 0.06); border-radius: 6px; padding: 2px; }
     .switch-btn { padding: 5px 12px; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; }
     .switch-btn.active-yes { background: var(--success); color: #fff; }
     .switch-btn.active-no { background: var(--danger); color: #fff; }
 
-    .action-btn {
-      width: 100%; padding: 14px; border-radius: 12px; border: none;
-      background: var(--accent-color); color: #fff; font-size: 15px;
-      font-weight: 700; cursor: pointer; display: flex; justify-content: center;
-      align-items: center; gap: 8px; transition: opacity 0.2s;
+    .photo-upload-box {
+      border: 2px dashed rgba(2, 132, 199, 0.4); border-radius: 12px; padding: 14px;
+      text-align: center; background: rgba(255, 255, 255, 0.6); cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
     }
-    .action-btn:disabled { opacity: 0.6; }
 
-    .status-msg {
-      display: none; padding: 12px; border-radius: 10px;
-      background: #dcfce7; color: #15803d; font-size: 14px;
-      font-weight: 600; text-align: center; margin-top: 10px;
-    }
+    .action-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--accent-color); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
 
     .week-selector { display: flex; gap: 8px; margin-bottom: 14px; }
-    .week-btn {
-      flex: 1; padding: 10px 6px; font-size: 12px; font-weight: 600;
-      border: 1px solid rgba(2, 132, 199, 0.2); border-radius: 10px;
-      background: rgba(255, 255, 255, 0.7); color: var(--text-muted); cursor: pointer;
-    }
+    .week-btn { flex: 1; padding: 10px 6px; font-size: 12px; font-weight: 600; border: 1px solid rgba(2, 132, 199, 0.2); border-radius: 10px; background: rgba(255, 255, 255, 0.7); color: var(--text-muted); cursor: pointer; }
     .week-btn.active { background: var(--accent-color); color: #fff; }
 
     .calendar-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-    .calendar-slot {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 14px; background: rgba(255, 255, 255, 0.75);
-      border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); cursor: pointer;
-    }
+    .calendar-slot { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(255, 255, 255, 0.75); border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); cursor: pointer; }
     .calendar-slot.selected { background: rgba(16, 185, 129, 0.15); border-color: var(--success); }
     .day-status { font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: rgba(0, 0, 0, 0.05); }
     .calendar-slot.selected .day-status { background: var(--success); color: #fff; }
@@ -150,19 +100,19 @@
   <!-- ВКЛАДКА 1: СДАТЬ СМЕНУ -->
   <main id="tab-handover" class="tab-content active">
     <div class="card">
+      <div class="card-title">📦 Обработка отправлений</div>
+      <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">
+        Принято ШК за смену (шт.):
+      </label>
+      <input type="number" id="barcodes-count" min="0" value="0">
+    </div>
+
+    <div class="card">
       <div class="card-title">🔎 Контроль выдачи</div>
       <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">
         Потеряшки — не выданные клиенту (шт.):
       </label>
       <input type="number" id="lost-items" min="0" value="0">
-    </div>
-
-    <div class="card">
-      <div class="card-title">📦 Обработка груза</div>
-      <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">
-        Принято ШК за смену (шт.):
-      </label>
-      <input type="number" id="barcodes-count" min="0" value="0">
     </div>
 
     <div class="card">
@@ -219,68 +169,144 @@
     </div>
 
     <div class="card">
+      <div class="card-title">📸 Фотофиксация порядка</div>
+      <label class="photo-upload-box" for="photo-file">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="#0284c7">
+          <path d="M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 1 0-6 0m0-8h4l2 2h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-2"/>
+        </svg>
+        <span id="photo-status" style="font-size:13px; font-weight:600; color:var(--accent-color)">Снять фото зоны порядка</span>
+      </label>
+      <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(this)">
+    </div>
+
+    <div class="card">
       <div class="card-title">💬 Замечания / инциденты</div>
       <textarea id="comments" placeholder="Опишите проблемы за смену или оставьте 'Без замечаний'..."></textarea>
     </div>
 
-    <button type="button" class="action-btn" id="btn-handover" onclick="submitHandover()">Отправить смену</button>
-    <div id="handover-status" class="status-msg">✅ Отчет успешно передан в бота!</div>
+    <button type="button" class="action-btn" onclick="submitHandover()">Отправить смену</button>
   </main>
 
-  <!-- ВКЛАДКА 2: ПРИНЯТЬ СМЕНУ -->
+ <!-- ВКЛАДКА 2: ПРИНЯТЬ СМЕНУ ПРЯМО В ПРИЛОЖЕНИИ -->
   <main id="tab-takeover" class="tab-content">
-    <div class="card" style="text-align: center; padding: 24px 16px;">
-      <div class="card-title" style="justify-content: center;">🤝 ПЕРЕДАЧА СМЕНЫ</div>
-      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
-        Для очной приемки смены и просмотра чек-листа предыдущего сотрудника нажмите кнопку ниже:
+    <div class="card" id="takeover-box">
+      <div class="card-title">🤝 ПРИЁМКА СМЕНЫ</div>
+      <p id="takeover-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+        Нажмите кнопку ниже, чтобы загрузить данные последней сданной смены:
       </p>
-      <button type="button" class="action-btn" id="btn-takeover" onclick="requestTakeover()">
-        🔍 Проверить и принять смену
+      
+      <button type="button" class="action-btn" id="btn-load-takeover" onclick="loadShiftDetails()">
+        🔍 Показать смену сменщика
       </button>
+
+      <!-- Блок с деталями отчета (скрыт до загрузки) -->
+      <div id="shift-details" style="display: none; margin-top: 14px; text-align: left;">
+        <div style="background: rgba(255,255,255,0.7); border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 13px; line-height: 1.5;">
+          <div>👤 <b>Сдал:</b> <span id="to-worker">Марина</span></div>
+          <div>🕒 <b>Время:</b> <span id="to-time">Сегодня</span></div>
+          <div>📦 <b>Принято ШК:</b> <span id="to-bc" style="font-weight:700; color:var(--accent-color)">0</span> шт.</div>
+          <div>🔎 <b>Потеряшки:</b> <span id="to-lost" style="font-weight:700; color:var(--danger)">0</span> шт.</div>
+          <div style="margin-top: 6px;">💬 <b>Комментарий:</b> <i id="to-comm">Без замечаний</i></div>
+        </div>
+
+        <!-- Кнопки подтверждения -->
+        <button type="button" class="action-btn" style="background: var(--success); margin-bottom: 8px;" onclick="confirmTakeover(false)">
+          ✅ Принять без замечаний
+        </button>
+        <button type="button" class="action-btn" style="background: var(--danger);" onclick="toggleIssuesBlock()">
+          ❌ Принять с замечаниями
+        </button>
+
+        <!-- Поле замечаний (если есть претензии) -->
+        <div id="issue-input-block" style="display: none; margin-top: 10px;">
+          <textarea id="issue-text" placeholder="Опишите претензии к рабочей зоне..." style="margin-bottom: 8px;"></textarea>
+          <button type="button" class="action-btn" onclick="confirmTakeover(true)">
+            ⚠️ Зафиксировать замечания
+          </button>
+        </div>
+      </div>
     </div>
   </main>
 
   <!-- ВКЛАДКА 3: РАСПИСАНИЕ -->
+<!-- ВКЛАДКА 3: РАСПИСАНИЕ -->
   <main id="tab-schedule" class="tab-content">
     <div class="card">
-      <div class="card-title">📅 Бронирование смен на неделю</div>
-      <div class="week-selector">
-        <button type="button" class="week-btn active" id="btn-week-1" onclick="changeWeek(1)">След. неделя</button>
-        <button type="button" class="week-btn" id="btn-week-2" onclick="changeWeek(2)">Через неделю</button>
+      <div class="card-title">📅 МОЙ ГРАФИК СМЕН</div>
+
+      <!-- 1. Блок с текущим согласованным графиком -->
+      <div id="schedule-active-card">
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          Текущий подтвержденный график работы:
+        </p>
+        <div id="approved-schedule-list" style="background: rgba(255,255,255,0.7); border-radius: 12px; padding: 12px; margin-bottom: 14px; font-size: 13px; line-height: 1.6;">
+          <div style="font-weight: 600; color: var(--accent-color); margin-bottom: 6px;">
+            Период: 05.10 — 11.10
+          </div>
+          <div>🟢 <b>Вт (06.10)</b> — Смена (12 ч)</div>
+          <div>🟢 <b>Сб (10.10)</b> — Смена (12 ч)</div>
+          <div style="color: var(--text-muted); font-size: 11px; margin-top: 6px;">
+            Статус: ✅ Согласовано руководством
+          </div>
+        </div>
+
+        <button type="button" class="action-btn" onclick="openScheduleEditor()">
+          ✏️ Изменить график (пересогласовать)
+        </button>
       </div>
 
-      <div class="calendar-grid" id="calendar-grid"></div>
+      <!-- 2. Блок редактирования и бронирования (скрыт по умолчанию) -->
+      <div id="schedule-editor-card" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="font-size: 12px; font-weight: 700; color: var(--accent-color); text-transform: uppercase;">Выбор новых дат:</span>
+          <button type="button" onclick="closeScheduleEditor()" style="background: none; border: none; color: var(--danger); font-size: 12px; font-weight: 600; cursor: pointer;">
+            ✕ Отмена
+          </button>
+        </div>
 
-      <button type="button" class="action-btn" id="btn-schedule" onclick="submitSchedule()">📨 Отправить график на согласование</button>
-      <div id="schedule-status" class="status-msg">✅ График направлен руководителю!</div>
+        <div class="week-selector">
+          <button type="button" class="week-btn active" id="btn-week-1" onclick="changeWeek(1)">След. неделя</button>
+          <button type="button" class="week-btn" id="btn-week-2" onclick="changeWeek(2)">Через неделю</button>
+        </div>
+
+        <div class="calendar-grid" id="calendar-grid"></div>
+
+        <button type="button" class="action-btn" onclick="submitSchedule()">
+          📨 Отправить график на согласование
+        </button>
+      </div>
     </div>
   </main>
 
   <!-- Footer Navigation -->
   <nav class="app-footer">
-    <button class="nav-btn active" onclick="switchTab('handover', this)">
+    <button class="nav-btn active" id="nav-handover" onclick="switchTab('handover', this)">
       <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
       Сдать
     </button>
-    <button class="nav-btn" onclick="switchTab('takeover', this)">
+    <button class="nav-btn" id="nav-takeover" onclick="switchTab('takeover', this)">
       <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
       Принять
     </button>
-    <button class="nav-btn" onclick="switchTab('schedule', this)">
+    <button class="nav-btn" id="nav-schedule" onclick="switchTab('schedule', this)">
       <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z"/></svg>
       График
     </button>
   </nav>
 
- <script>
-    // УКАЖИТЕ ТОЧНЫЙ USERNAME ВАШЕГО БОТА БЕЗ ЗНАКА @
+  <script>
+    // ВСТАВЬТЕ ТОЧНЫЙ USERNAME ВАШЕГО БОТА (БЕЗ @)
     const BOT_USERNAME = "mpshift_bot";
 
     const tg = window.Telegram.WebApp;
-    try {
-      tg.ready();
-      tg.expand();
-    } catch (e) {}
+    try { tg.ready(); tg.expand(); } catch (e) {}
+
+    // Автопереключение на вкладку "График", если в URL есть #schedule
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.location.hash === '#schedule') {
+        switchTab('schedule', document.getElementById('nav-schedule'));
+      }
+    });
 
     const user = tg.initDataUnsafe?.user;
     if (user) {
@@ -294,7 +320,7 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabName).classList.add('active');
-      btn.classList.add('active');
+      if (btn) btn.classList.add('active');
     }
 
     const checklist = {
@@ -308,6 +334,14 @@
       checklist[key] = val;
       container.querySelectorAll('.switch-btn').forEach(b => b.className = 'switch-btn');
       btn.classList.add(val ? 'active-yes' : 'active-no');
+    }
+
+    let photoAttached = false;
+    function handlePhotoUpload(input) {
+      if (input.files && input.files[0]) {
+        photoAttached = true;
+        document.getElementById('photo-status').textContent = '✅ Фото готово к отправке';
+      }
     }
 
     const RU_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -366,9 +400,7 @@
       });
     }
 
-    // Передача полезной нагрузки через стандартный переход Telegram
     function sendPayloadViaLink(payloadObj) {
-      // Сжимаем данные в Base64 URL-safe строку
       const jsonStr = JSON.stringify(payloadObj);
       const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
         return String.fromCharCode('0x' + p1);
@@ -377,24 +409,19 @@
       tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=d_${b64}`);
     }
 
-    // 1. Отправка отчета сдачи смены
     function submitHandover() {
       const lostInput = document.getElementById('lost-items').value.trim();
       const barcodesInput = document.getElementById('barcodes-count').value.trim();
 
-      if (lostInput === '' || parseInt(lostInput, 10) < 0) {
-        alert('Укажите число потеряшек (0 допускается).');
-        return;
-      }
-      if (barcodesInput === '' || parseInt(barcodesInput, 10) < 0) {
-        alert('Укажите количество принятых ШК (0 допускается).');
+      if (!photoAttached) {
+        alert('Пожалуйста, прикрепите фото рабочей зоны перед сдачей смены!');
         return;
       }
 
       const payload = {
         act: "handover",
-        lost: parseInt(lostInput, 10),
-        bc: parseInt(barcodesInput, 10),
+        lost: parseInt(lostInput, 10) || 0,
+        bc: parseInt(barcodesInput, 10) || 0,
         cl: {
           "Уборка (клиент)": checklist.clean_client ? "Да" : "Нет",
           "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
@@ -410,14 +437,12 @@
       sendPayloadViaLink(payload);
     }
 
-    // 2. Отправка графика на согласование
     function submitSchedule() {
       if (selectedCalendarSlots.length === 0) {
-        alert('Пожалуйста, выберите хотя бы один день для смены!');
+        alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
         return;
       }
 
-      // Передаем номера выбранных дней недели (0-6)
       const weekDates = getWeekDates(currentWeekOffset);
       const daysIdx = [];
       weekDates.forEach((d, idx) => {
@@ -434,12 +459,45 @@
       sendPayloadViaLink(payload);
     }
 
-    // 3. Проверить и принять смену
     function requestTakeover() {
       tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=takeover`);
     }
 
     renderCalendar();
+
+    // 1. Отображение деталей смены прямо на экране
+    function loadShiftDetails() {
+      document.getElementById('btn-load-takeover').style.display = 'none';
+      document.getElementById('takeover-desc').textContent = 'Проверьте порядок в клиентской и складской зоне:';
+      document.getElementById('shift-details').style.display = 'block';
+    }
+
+    // 2. Раскрытие блока претензий
+    function toggleIssuesBlock() {
+      const block = document.getElementById('issue-input-block');
+      block.style.display = (block.style.display === 'none' || !block.style.display) ? 'block' : 'none';
+    }
+
+    // 3. Отправка подтверждения приёмки боту
+    function confirmTakeover(hasIssues) {
+      let issueComment = "—";
+      if (hasIssues) {
+        const text = document.getElementById('issue-text').value.trim();
+        if (!text) {
+          alert('Опишите выявленные замечания перед отправкой!');
+          return;
+        }
+        issueComment = text;
+      }
+
+      const payload = {
+        act: "takeover_submit",
+        status: hasIssues ? "Принято с замечаниями" : "Принято без замечаний",
+        issues: issueComment
+      };
+
+      sendPayloadViaLink(payload);
+    }
   </script>
 </body>
 </html>
