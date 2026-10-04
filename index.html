@@ -329,10 +329,13 @@
       btn.classList.add(val ? 'active-yes' : 'active-no');
     }
 
+// 4. Сдача смены С ОБЯЗАТЕЛЬНЫМ ФОТО
     let photoAttached = false;
     function handlePhotoUpload(input) {
-      photoAttached = true;
-      document.getElementById('photo-status').textContent = '✅ Фото прикреплено';
+      if (input.files && input.files[0]) {
+        photoAttached = true;
+        document.getElementById('photo-status').textContent = '✅ Фото прикреплено';
+      }
     }
 
     // --- Календарь ---
@@ -391,11 +394,12 @@
       });
     }
 
+// 2. Открытие редактора с точной синхронизацией
     function openScheduleEditor() {
       document.getElementById('schedule-active-card').style.display = 'none';
       document.getElementById('schedule-editor-card').style.display = 'block';
 
-      const savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-10", "2026-10-11"]');
+      let savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-08", "2026-10-10", "2026-10-11"]');
       selectedCalendarSlots = [...savedDays];
       renderCalendar();
     }
@@ -416,13 +420,16 @@
     }
 
     // 1. ОТПРАВКА СДАЧИ СМЕНЫ (Ультра-компактная, укладывается в 35 символов)
-    function submitHandover() {
-      const btn = event.target;
+   function submitHandover() {
+      if (!photoAttached) {
+        alert('⚠️ Прикрепите фото зоны порядка перед сдачей смены!');
+        return;
+      }
+
       const lostInput = document.getElementById('lost-items').value.trim();
       const barcodesInput = document.getElementById('barcodes-count').value.trim();
       const commVal = document.getElementById('comments').value.trim() || "";
 
-      // Формируем компактные биты чек-листа: "1110011"
       const clBits = [
         checklist.clean_client ? 1 : 0,
         checklist.clean_warehouse ? 1 : 0,
@@ -442,13 +449,9 @@
         accepted: false
       };
 
-      // Сохраняем локально, чтобы вкладка "Принять" сразу обновилась
       localStorage.setItem('last_submitted_shift', JSON.stringify(shiftData));
 
-      // Визуальный отклик
-      btn.textContent = "⏳ Отправка в бота...";
-      btn.style.opacity = "0.7";
-
+      // Компактный payload (гарантированно проходит лимит ссылки)
       const payload = {
         act: "h",
         l: shiftData.lost,
@@ -458,21 +461,20 @@
       };
 
       sendPayloadViaLink(payload);
-
-      setTimeout(() => {
-        btn.textContent = "✅ Смена отправлена!";
-        btn.style.background = "var(--success)";
-      }, 500);
     }
 
     // 2. ОТПРАВКА ГРАФИКА
+    // 3. Отправка графика: сортируем слоты перед отправкой
     function submitSchedule() {
-      const btn = event.target;
       if (selectedCalendarSlots.length === 0) {
         alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
         return;
       }
 
+      // Сортируем выбранные слоты
+      selectedCalendarSlots.sort();
+
+      // Сохраняем в память
       localStorage.setItem('my_approved_days', JSON.stringify(selectedCalendarSlots));
       renderApprovedScheduleCard();
 
@@ -483,8 +485,6 @@
         if (selectedCalendarSlots.includes(key)) daysIdx.push(idx);
       });
 
-      btn.textContent = "⏳ Отправка на согласование...";
-
       const payload = {
         act: "sched",
         wo: currentWeekOffset,
@@ -492,11 +492,7 @@
       };
 
       sendPayloadViaLink(payload);
-
-      setTimeout(() => {
-        btn.textContent = "✅ График направлен!";
-        closeScheduleEditor();
-      }, 500);
+      closeScheduleEditor();
     }
 
     // 3. ПРИЁМКА СМЕНЫ
@@ -570,24 +566,32 @@
       }
     }
 
-    // Отрисовка карточки графика
+// 1. Хронологическая сортировка и отрисовка согласованных смен
     function renderApprovedScheduleCard() {
       const container = document.getElementById('approved-days-container');
       if (!container) return;
 
-      const savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-10", "2026-10-11"]');
+      let savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-08", "2026-10-10", "2026-10-11"]');
+
+      // СТРОГАЯ СОРТИРОВКА ПО ВОЗРАСТАНИЮ ДАТЫ (Пн -> Вс)
+      savedDays.sort();
+
       const dayNames = {
         "2026-10-05": "Пн (05.10)", "2026-10-06": "Вт (06.10)", "2026-10-07": "Ср (07.10)",
         "2026-10-08": "Чт (08.10)", "2026-10-09": "Пт (09.10)", "2026-10-10": "Сб (10.10)", "2026-10-11": "Вс (11.10)"
       };
 
       container.innerHTML = '';
-      savedDays.forEach(dateStr => {
-        const title = dayNames[dateStr] || dateStr;
-        const row = document.createElement('div');
-        row.innerHTML = `🟢 <b>${title}</b> — Смена (12 ч)`;
-        container.appendChild(row);
-      });
+      if (savedDays.length === 0) {
+        container.innerHTML = '<div><i>Нет согласованных смен</i></div>';
+      } else {
+        savedDays.forEach(dateStr => {
+          const title = dayNames[dateStr] || dateStr;
+          const row = document.createElement('div');
+          row.innerHTML = `🟢 <b>${title}</b> — Смена (12 ч)`;
+          container.appendChild(row);
+        });
+      }
     }
 
     renderCalendar();
