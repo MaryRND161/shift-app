@@ -500,20 +500,16 @@
 
     // 2. ОТПРАВКА ГРАФИКА
 // 2. ОТПРАВКА ГРАФИКА НА СОГЛАСОВАНИЕ
-    function submitSchedule() {
+   function submitSchedule() {
       if (selectedCalendarSlots.length === 0) {
         alert('Пожалуйста, выберите хотя бы один день для смены!');
         return;
       }
 
-      // Сортируем дни
       selectedCalendarSlots.sort();
-
-      // Сохраняем локально новые дни
       localStorage.setItem('my_approved_days', JSON.stringify(selectedCalendarSlots));
       renderApprovedScheduleCard();
 
-      // Получаем индексы выбранных дней (0 = Пн, 6 = Вс)
       const weekDates = getWeekDates(currentWeekOffset);
       const daysIdx = [];
       weekDates.forEach((d, idx) => {
@@ -521,11 +517,10 @@
         if (selectedCalendarSlots.includes(key)) daysIdx.push(idx);
       });
 
-      // Формируем сверхкороткий payload: s_Смещение_ИндексыЧерезЗапятую
-      // Пример: s_1_2,3,5,6 (длина 11 символов)
-      const daysStr = daysIdx.join(',');
+      // Передаем дни слитной строкой цифр БЕЗ запятых (например, 0245)
+      // Это на 100% исключает ошибки URL-парсинга в Telegram
+      const daysStr = daysIdx.join('');
       const rawPayload = `s_${currentWeekOffset}_${daysStr}`;
-
       const targetUrl = `https://t.me/${BOT_USERNAME}?start=${rawPayload}`;
 
       try {
@@ -538,12 +533,8 @@
         window.location.href = targetUrl;
       }
 
-      // Закрываем окно редактора
       closeScheduleEditor();
-
-      try {
-        window.Telegram.WebApp.close();
-      } catch (e) {}
+      try { window.Telegram.WebApp.close(); } catch (e) {}
     }
 
     // 3. ПРИЁМКА СМЕНЫ
