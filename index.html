@@ -234,12 +234,12 @@
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
           Текущий подтвержденный график работы:
         </p>
-        <div id="approved-schedule-list" style="background: rgba(255,255,255,0.7); border-radius: 12px; padding: 12px; margin-bottom: 14px; font-size: 13px; line-height: 1.6;">
-          <div style="font-weight: 600; color: var(--accent-color); margin-bottom: 6px;">
+       <div id="approved-schedule-list" style="background: rgba(255,255,255,0.7); border-radius: 12px; padding: 12px; margin-bottom: 14px; font-size: 13px; line-height: 1.6;">
+          <div style="font-weight: 600; color: var(--accent-color); margin-bottom: 6px;" id="sched-period-title">
             Период: 05.10 — 11.10
           </div>
-          <div>🟢 <b>Вт (06.10)</b> — Смена (12 ч)</div>
-          <div>🟢 <b>Сб (10.10)</b> — Смена (12 ч)</div>
+          <!-- Сюда JavaScript динамически вставляет актуальные дни -->
+          <div id="approved-days-container"></div>
           <div style="color: var(--text-muted); font-size: 11px; margin-top: 6px;">
             Статус: ✅ Согласовано руководством
           </div>
@@ -386,17 +386,14 @@
       });
     }
 
-    // При открытии редактора предзаполняем согласованные дни (Вторник и Субботу)
+    // ЗАМЕНИТЬ существующую openScheduleEditor:
     function openScheduleEditor() {
       document.getElementById('schedule-active-card').style.display = 'none';
       document.getElementById('schedule-editor-card').style.display = 'block';
 
-      // Выставляем дни текущей недели (Вт=индекс 1, Сб=индекс 5)
-      const weekDates = getWeekDates(currentWeekOffset);
-      selectedCalendarSlots = [
-        weekDates[1].toISOString().split('T')[0], // Вт
-        weekDates[5].toISOString().split('T')[0]  // Сб
-      ];
+      // Загружаем сохраненные дни в активные слоты сетки:
+      const savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-10", "2026-10-11"]');
+      selectedCalendarSlots = [...savedDays];
       renderCalendar();
     }
 
@@ -438,13 +435,18 @@
       sendPayloadViaLink(payload);
     }
 
-    // 2. Отправка расписания
+   // ЗАМЕНИТЬ существующую submitSchedule:
     function submitSchedule() {
       if (selectedCalendarSlots.length === 0) {
         alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
         return;
       }
 
+      // 1. Сохраняем новые даты в память браузера
+      localStorage.setItem('my_approved_days', JSON.stringify(selectedCalendarSlots));
+      renderApprovedScheduleCard();
+
+      // 2. Отправляем в Telegram
       const weekDates = getWeekDates(currentWeekOffset);
       const daysIdx = [];
       weekDates.forEach((d, idx) => {
@@ -487,7 +489,35 @@
       sendPayloadViaLink(payload);
     }
 
+// --- Отрисовка согласованного графика из памяти браузера ---
+    function renderApprovedScheduleCard() {
+      const container = document.getElementById('approved-days-container');
+      if (!container) return;
+
+      // Считываем сохраненные дни из памяти (по умолчанию Ср, Сб, Вс)
+      const savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-10", "2026-10-11"]');
+      
+      const dayNames = {
+        "2026-10-05": "Пн (05.10)", "2026-10-06": "Вт (06.10)", "2026-10-07": "Ср (07.10)",
+        "2026-10-08": "Чт (08.10)", "2026-10-09": "Пт (09.10)", "2026-10-10": "Сб (10.10)", "2026-10-11": "Вс (11.10)"
+      };
+
+      container.innerHTML = '';
+      if (savedDays.length === 0) {
+        container.innerHTML = '<div><i>Нет назначенных смен на эту неделю</i></div>';
+      } else {
+        savedDays.forEach(dateStr => {
+          const title = dayNames[dateStr] || dateStr;
+          const row = document.createElement('div');
+          row.innerHTML = `🟢 <b>${title}</b> — Смена (12 ч)`;
+          container.appendChild(row);
+        });
+      }
+    }
+
+    // Запуск первичной отрисовки при открытии приложения
     renderCalendar();
+    renderApprovedScheduleCard();
   </script>
 </body>
 </html>
