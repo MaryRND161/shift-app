@@ -187,38 +187,34 @@
     <button type="button" class="action-btn" onclick="submitHandover()">Отправить смену</button>
   </main>
 
- <!-- ВКЛАДКА 2: ПРИНЯТЬ СМЕНУ ПРЯМО В ПРИЛОЖЕНИИ -->
+<!-- ВКЛАДКА 2: ПРИНЯТЬ СМЕНУ -->
   <main id="tab-takeover" class="tab-content">
     <div class="card" id="takeover-box">
       <div class="card-title">🤝 ПРИЁМКА СМЕНЫ</div>
       <p id="takeover-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-        Нажмите кнопку ниже, чтобы загрузить данные последней сданной смены:
+        Проверьте порядок в клиентской и складской зоне:
       </p>
       
-      <button type="button" class="action-btn" id="btn-load-takeover" onclick="loadShiftDetails()">
-        🔍 Показать смену сменщика
-      </button>
-
-      <!-- Блок с деталями отчета (скрыт до загрузки) -->
-      <div id="shift-details" style="display: none; margin-top: 14px; text-align: left;">
+      <!-- Карточка данных смены -->
+      <div id="shift-details" style="text-align: left;">
         <div style="background: rgba(255,255,255,0.7); border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 13px; line-height: 1.5;">
-          <div>👤 <b>Сдал:</b> <span id="to-worker">Марина</span></div>
-          <div>🕒 <b>Время:</b> <span id="to-time">Сегодня</span></div>
-          <div>📦 <b>Принято ШК:</b> <span id="to-bc" style="font-weight:700; color:var(--accent-color)">0</span> шт.</div>
-          <div>🔎 <b>Потеряшки:</b> <span id="to-lost" style="font-weight:700; color:var(--danger)">0</span> шт.</div>
-          <div style="margin-top: 6px;">💬 <b>Комментарий:</b> <i id="to-comm">Без замечаний</i></div>
+          <div>👤 <b>Сдал:</b> <span>Марина</span></div>
+          <div>🕒 <b>Время:</b> <span>Сегодня</span></div>
+          <div>📦 <b>Принято ШК:</b> <span style="font-weight:700; color:var(--accent-color)">0</span> шт.</div>
+          <div>🔎 <b>Потеряшки:</b> <span style="font-weight:700; color:var(--danger)">0</span> шт.</div>
+          <div style="margin-top: 6px;">💬 <b>Комментарий:</b> <i>Без замечаний</i></div>
         </div>
 
         <!-- Кнопки подтверждения -->
         <button type="button" class="action-btn" style="background: var(--success); margin-bottom: 8px;" onclick="confirmTakeover(false)">
           ✅ Принять без замечаний
         </button>
-        <button type="button" class="action-btn" style="background: var(--danger);" onclick="toggleIssuesBlock()">
+        <button type="button" class="action-btn" style="background: var(--danger); margin-bottom: 8px;" onclick="toggleIssuesBlock()">
           ❌ Принять с замечаниями
         </button>
 
-        <!-- Поле замечаний (если есть претензии) -->
-        <div id="issue-input-block" style="display: none; margin-top: 10px;">
+        <!-- Поле замечаний (скрыто до нажатия) -->
+        <div id="issue-input-block" style="display: none; margin-top: 6px;">
           <textarea id="issue-text" placeholder="Опишите претензии к рабочей зоне..." style="margin-bottom: 8px;"></textarea>
           <button type="button" class="action-btn" onclick="confirmTakeover(true)">
             ⚠️ Зафиксировать замечания
@@ -228,7 +224,6 @@
     </div>
   </main>
 
-  <!-- ВКЛАДКА 3: РАСПИСАНИЕ -->
 <!-- ВКЛАДКА 3: РАСПИСАНИЕ -->
   <main id="tab-schedule" class="tab-content">
     <div class="card">
@@ -301,13 +296,6 @@
     const tg = window.Telegram.WebApp;
     try { tg.ready(); tg.expand(); } catch (e) {}
 
-    // Автопереключение на вкладку "График", если в URL есть #schedule
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.location.hash === '#schedule') {
-        switchTab('schedule', document.getElementById('nav-schedule'));
-      }
-    });
-
     const user = tg.initDataUnsafe?.user;
     if (user) {
       document.getElementById('user-name').textContent = user.first_name || "Сотрудник";
@@ -338,12 +326,11 @@
 
     let photoAttached = false;
     function handlePhotoUpload(input) {
-      if (input.files && input.files[0]) {
-        photoAttached = true;
-        document.getElementById('photo-status').textContent = '✅ Фото готово к отправке';
-      }
+      photoAttached = true;
+      document.getElementById('photo-status').textContent = '✅ Фото прикреплено';
     }
 
+    // --- Календарь и автозаполнение согласованных дней ---
     const RU_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
     let currentWeekOffset = 1;
     let selectedCalendarSlots = [];
@@ -352,7 +339,6 @@
       currentWeekOffset = offset;
       document.getElementById('btn-week-1').classList.toggle('active', offset === 1);
       document.getElementById('btn-week-2').classList.toggle('active', offset === 2);
-      selectedCalendarSlots = [];
       renderCalendar();
     }
 
@@ -400,6 +386,25 @@
       });
     }
 
+    // При открытии редактора предзаполняем согласованные дни (Вторник и Субботу)
+    function openScheduleEditor() {
+      document.getElementById('schedule-active-card').style.display = 'none';
+      document.getElementById('schedule-editor-card').style.display = 'block';
+
+      // Выставляем дни текущей недели (Вт=индекс 1, Сб=индекс 5)
+      const weekDates = getWeekDates(currentWeekOffset);
+      selectedCalendarSlots = [
+        weekDates[1].toISOString().split('T')[0], // Вт
+        weekDates[5].toISOString().split('T')[0]  // Сб
+      ];
+      renderCalendar();
+    }
+
+    function closeScheduleEditor() {
+      document.getElementById('schedule-editor-card').style.display = 'none';
+      document.getElementById('schedule-active-card').style.display = 'block';
+    }
+
     function sendPayloadViaLink(payloadObj) {
       const jsonStr = JSON.stringify(payloadObj);
       const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
@@ -409,14 +414,10 @@
       tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=d_${b64}`);
     }
 
+    // 1. Отправка сдачи смены (БЕЗ блокировки по фото)
     function submitHandover() {
       const lostInput = document.getElementById('lost-items').value.trim();
       const barcodesInput = document.getElementById('barcodes-count').value.trim();
-
-      if (!photoAttached) {
-        alert('Пожалуйста, прикрепите фото рабочей зоны перед сдачей смены!');
-        return;
-      }
 
       const payload = {
         act: "handover",
@@ -437,6 +438,7 @@
       sendPayloadViaLink(payload);
     }
 
+    // 2. Отправка расписания
     function submitSchedule() {
       if (selectedCalendarSlots.length === 0) {
         alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
@@ -457,29 +459,14 @@
       };
 
       sendPayloadViaLink(payload);
-      closeScheduleEditor();
     }
 
-    function requestTakeover() {
-      tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=takeover`);
-    }
-
-    renderCalendar();
-
-    // 1. Отображение деталей смены прямо на экране
-    function loadShiftDetails() {
-      document.getElementById('btn-load-takeover').style.display = 'none';
-      document.getElementById('takeover-desc').textContent = 'Проверьте порядок в клиентской и складской зоне:';
-      document.getElementById('shift-details').style.display = 'block';
-    }
-
-    // 2. Раскрытие блока претензий
+    // 3. Функции вкладки "Принять"
     function toggleIssuesBlock() {
       const block = document.getElementById('issue-input-block');
       block.style.display = (block.style.display === 'none' || !block.style.display) ? 'block' : 'none';
     }
 
-    // 3. Отправка подтверждения приёмки боту
     function confirmTakeover(hasIssues) {
       let issueComment = "—";
       if (hasIssues) {
@@ -499,27 +486,8 @@
 
       sendPayloadViaLink(payload);
     }
-// Открытие интерактивной сетки выбора дат
-    function openScheduleEditor() {
-      document.getElementById('schedule-active-card').style.display = 'none';
-      document.getElementById('schedule-editor-card').style.display = 'block';
-      renderCalendar();
-    }
 
-    // Возврат к просмотру текущего графика
-    function closeScheduleEditor() {
-      document.getElementById('schedule-editor-card').style.display = 'none';
-      document.getElementById('schedule-active-card').style.display = 'block';
-    }
-
-    // Автоматическое переключение в режим редактирования, если в ссылке есть #schedule
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.location.hash === '#schedule') {
-        switchTab('schedule', document.getElementById('nav-schedule'));
-        openScheduleEditor();
-      }
-    });
-    
+    renderCalendar();
   </script>
 </body>
 </html>
