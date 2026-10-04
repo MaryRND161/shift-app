@@ -419,16 +419,20 @@
       tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=d_${b64}`);
     }
 
-    // 1. ОТПРАВКА СДАЧИ СМЕНЫ (Ультра-компактная, укладывается в 35 символов)
-   function submitHandover() {
+    // 1. Сдача смены (полная и точная передача без урезания длины)
+    function submitHandover() {
       if (!photoAttached) {
-        alert('⚠️ Прикрепите фото зоны порядка перед сдачей смены!');
+        alert('⚠️ Сначала сделайте и прикрепите фото рабочей зоны!');
         return;
       }
 
-      const lostInput = document.getElementById('lost-items').value.trim();
-      const barcodesInput = document.getElementById('barcodes-count').value.trim();
-      const commVal = document.getElementById('comments').value.trim() || "";
+      const lostInput = document.getElementById('lost-items');
+      const barcodesInput = document.getElementById('barcodes-count');
+      const commentsInput = document.getElementById('comments');
+
+      const lostVal = lostInput ? parseInt(lostInput.value, 10) : 0;
+      const barcodesVal = barcodesInput ? parseInt(barcodesInput.value, 10) : 0;
+      const commText = commentsInput ? commentsInput.value.trim() : "";
 
       const clBits = [
         checklist.clean_client ? 1 : 0,
@@ -443,23 +447,24 @@
       const shiftData = {
         worker: user?.first_name || "Сотрудник",
         time: new Date().toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' }),
-        bc: parseInt(barcodesInput, 10) || 0,
-        lost: parseInt(lostInput, 10) || 0,
-        comm: commVal || "Без замечаний",
+        bc: isNaN(barcodesVal) ? 0 : barcodesVal,
+        lost: isNaN(lostVal) ? 0 : lostVal,
+        comm: commText || "Без замечаний",
         accepted: false
       };
 
       localStorage.setItem('last_submitted_shift', JSON.stringify(shiftData));
 
-      // Компактный payload (гарантированно проходит лимит ссылки)
+      // Формируем полезную нагрузку со всеми полями
       const payload = {
         act: "h",
         l: shiftData.lost,
         b: shiftData.bc,
         c: clBits,
-        m: commVal.substring(0, 20)
+        m: shiftData.comm
       };
 
+      // Отправляем в Telegram
       sendPayloadViaLink(payload);
     }
 
