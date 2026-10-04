@@ -172,6 +172,14 @@
       </label>
       <input type="number" id="lost-items" min="0" value="0">
     </div>
+    <!-- Новое поле: Принято ШК -->
+    <div class="card">
+      <div class="card-title">📦 Приемка</div>
+      <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">
+        Принято ШК за смену (шт.):
+      </label>
+      <input type="number" id="barcodes-count" min="0" value="0" placeholder="0">
+    </div>
 
     <div class="card">
       <div class="card-title">✅ Чек-лист проверки смены</div>
@@ -381,16 +389,23 @@
     }
 
     // 6. Отправка отчета (БЕЗ блокирующих диалогов)
-    function submitHandover() {
+function submitHandover() {
       const lostInput = document.getElementById('lost-items').value.trim();
+      const barcodesInput = document.getElementById('barcodes-count').value.trim();
+
       if (lostInput === '' || parseInt(lostInput, 10) < 0) {
         tg.showAlert('Укажите число потеряшек (0 допускается).');
+        return;
+      }
+      if (barcodesInput === '' || parseInt(barcodesInput, 10) < 0) {
+        tg.showAlert('Укажите количество принятых ШК (0 допускается).');
         return;
       }
 
       const payload = {
         action: "handover_submit",
         lost_items_count: parseInt(lostInput, 10),
+        barcodes_count: parseInt(barcodesInput, 10),
         checklist: {
           "Уборка (клиентская)": checklist.clean_client ? "Да" : "Нет",
           "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
