@@ -457,6 +457,7 @@
       };
 
       sendPayloadViaLink(payload);
+      closeScheduleEditor();
     }
 
     function requestTakeover() {
@@ -498,6 +499,27 @@
 
       sendPayloadViaLink(payload);
     }
+// Открытие интерактивной сетки выбора дат
+    function openScheduleEditor() {
+      document.getElementById('schedule-active-card').style.display = 'none';
+      document.getElementById('schedule-editor-card').style.display = 'block';
+      renderCalendar();
+    }
+
+    // Возврат к просмотру текущего графика
+    function closeScheduleEditor() {
+      document.getElementById('schedule-editor-card').style.display = 'none';
+      document.getElementById('schedule-active-card').style.display = 'block';
+    }
+
+    // Автоматическое переключение в режим редактирования, если в ссылке есть #schedule
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.location.hash === '#schedule') {
+        switchTab('schedule', document.getElementById('nav-schedule'));
+        openScheduleEditor();
+      }
+    });
+    
   </script>
 </body>
 </html>
