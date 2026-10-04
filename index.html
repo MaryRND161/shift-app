@@ -499,17 +499,21 @@
     }
 
     // 2. ОТПРАВКА ГРАФИКА
+// 2. ОТПРАВКА ГРАФИКА НА СОГЛАСОВАНИЕ
     function submitSchedule() {
-      const btn = event?.target;
       if (selectedCalendarSlots.length === 0) {
-        alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
+        alert('Пожалуйста, выберите хотя бы один день для смены!');
         return;
       }
 
+      // Сортируем дни
       selectedCalendarSlots.sort();
+
+      // Сохраняем локально новые дни
       localStorage.setItem('my_approved_days', JSON.stringify(selectedCalendarSlots));
       renderApprovedScheduleCard();
 
+      // Получаем индексы выбранных дней (0 = Пн, 6 = Вс)
       const weekDates = getWeekDates(currentWeekOffset);
       const daysIdx = [];
       weekDates.forEach((d, idx) => {
@@ -517,20 +521,29 @@
         if (selectedCalendarSlots.includes(key)) daysIdx.push(idx);
       });
 
-      if (btn) btn.textContent = "⏳ Отправка графика...";
+      // Формируем сверхкороткий payload: s_Смещение_ИндексыЧерезЗапятую
+      // Пример: s_1_2,3,5,6 (длина 11 символов)
+      const daysStr = daysIdx.join(',');
+      const rawPayload = `s_${currentWeekOffset}_${daysStr}`;
 
-      const payload = {
-        act: "sched",
-        wo: currentWeekOffset,
-        days: daysIdx
-      };
+      const targetUrl = `https://t.me/${BOT_USERNAME}?start=${rawPayload}`;
 
-      sendUniversalPayload(payload);
+      try {
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+          window.Telegram.WebApp.openTelegramLink(targetUrl);
+        } else {
+          window.location.href = targetUrl;
+        }
+      } catch (err) {
+        window.location.href = targetUrl;
+      }
 
-      setTimeout(() => {
-        if (btn) btn.textContent = "✅ График направлен!";
-        closeScheduleEditor();
-      }, 400);
+      // Закрываем окно редактора
+      closeScheduleEditor();
+
+      try {
+        window.Telegram.WebApp.close();
+      } catch (e) {}
     }
 
     // 3. ПРИЁМКА СМЕНЫ
