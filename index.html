@@ -188,24 +188,26 @@
   </main>
 
 <!-- ВКЛАДКА 2: ПРИНЯТЬ СМЕНУ -->
-  <main id="tab-takeover" class="tab-content">
-    <div class="card" id="takeover-box">
-      <div class="card-title">🤝 ПРИЁМКА СМЕНЫ</div>
-      <p id="takeover-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-        Проверьте порядок в клиентской и складской зоне:
-      </p>
-      
-      <!-- Карточка данных смены -->
-      <div id="shift-details" style="text-align: left;">
-        <div style="background: rgba(255,255,255,0.7); border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 13px; line-height: 1.5;">
-          <div>👤 <b>Сдал:</b> <span>Марина</span></div>
-          <div>🕒 <b>Время:</b> <span>Сегодня</span></div>
-          <div>📦 <b>Принято ШК:</b> <span style="font-weight:700; color:var(--accent-color)">0</span> шт.</div>
-          <div>🔎 <b>Потеряшки:</b> <span style="font-weight:700; color:var(--danger)">0</span> шт.</div>
-          <div style="margin-top: 6px;">💬 <b>Комментарий:</b> <i>Без замечаний</i></div>
-        </div>
+<main id="tab-takeover" class="tab-content">
+  <div class="card" id="takeover-box">
+    <div class="card-title">🤝 ПРИЁМКА СМЕНЫ</div>
+    <p id="takeover-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+      Проверьте порядок в клиентской и складской зоне:
+    </p>
+    
+    <!-- Динамическая карточка данных смены -->
+    <div id="shift-details" style="text-align: left;">
+      <div style="background: rgba(255,255,255,0.7); border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 13px; line-height: 1.5;">
+        <div>👤 <b>Сдал:</b> <span id="to-worker-name" style="font-weight:600;">—</span></div>
+        <div>🕒 <b>Время:</b> <span id="to-time-str">Ожидание отчета</span></div>
+        <div>📦 <b>Принято ШК:</b> <span id="to-barcodes-val" style="font-weight:700; color:var(--accent-color)">0</span> шт.</div>
+        <div>🔎 <b>Потеряшки:</b> <span id="to-lost-val" style="font-weight:700; color:var(--danger)">0</span> шт.</div>
+        <div style="margin-top: 6px;">💬 <b>Комментарий:</b> <i id="to-comments-val">Без замечаний</i></div>
+        <div id="to-status-badge" style="margin-top: 6px; font-size: 12px; font-weight: 600; color: #d97706;">Статус: ⏳ Ожидает приёмки</div>
+      </div>
 
-        <!-- Кнопки подтверждения -->
+      <!-- Кнопки подтверждения -->
+      <div id="takeover-actions-block">
         <button type="button" class="action-btn" style="background: var(--success); margin-bottom: 8px;" onclick="confirmTakeover(false)">
           ✅ Принять без замечаний
         </button>
@@ -222,7 +224,8 @@
         </div>
       </div>
     </div>
-  </main>
+  </div>
+</main>
 
 <!-- ВКЛАДКА 3: РАСПИСАНИЕ -->
   <main id="tab-schedule" class="tab-content">
@@ -289,7 +292,7 @@
     </button>
   </nav>
 
-  <script>
+ <script>
     // ВСТАВЬТЕ ТОЧНЫЙ USERNAME ВАШЕГО БОТА (БЕЗ @)
     const BOT_USERNAME = "mpshift_bot";
 
@@ -309,6 +312,8 @@
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabName).classList.add('active');
       if (btn) btn.classList.add('active');
+      if (tabName === 'takeover') renderTakeoverCard();
+      if (tabName === 'schedule') renderApprovedScheduleCard();
     }
 
     const checklist = {
@@ -330,7 +335,7 @@
       document.getElementById('photo-status').textContent = '✅ Фото прикреплено';
     }
 
-    // --- Календарь и автозаполнение согласованных дней ---
+    // --- Календарь ---
     const RU_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
     let currentWeekOffset = 1;
     let selectedCalendarSlots = [];
@@ -386,12 +391,10 @@
       });
     }
 
-    // ЗАМЕНИТЬ существующую openScheduleEditor:
     function openScheduleEditor() {
       document.getElementById('schedule-active-card').style.display = 'none';
       document.getElementById('schedule-editor-card').style.display = 'block';
 
-      // Загружаем сохраненные дни в активные слоты сетки:
       const savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-10", "2026-10-11"]');
       selectedCalendarSlots = [...savedDays];
       renderCalendar();
@@ -402,6 +405,7 @@
       document.getElementById('schedule-active-card').style.display = 'block';
     }
 
+    // Безопасная отправка deep-link
     function sendPayloadViaLink(payloadObj) {
       const jsonStr = JSON.stringify(payloadObj);
       const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
@@ -411,48 +415,75 @@
       tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=d_${b64}`);
     }
 
-    // 1. Отправка сдачи смены (БЕЗ блокировки по фото)
+    // 1. ОТПРАВКА СДАЧИ СМЕНЫ (Ультра-компактная, укладывается в 35 символов)
     function submitHandover() {
+      const btn = event.target;
       const lostInput = document.getElementById('lost-items').value.trim();
       const barcodesInput = document.getElementById('barcodes-count').value.trim();
+      const commVal = document.getElementById('comments').value.trim() || "";
+
+      // Формируем компактные биты чек-листа: "1110011"
+      const clBits = [
+        checklist.clean_client ? 1 : 0,
+        checklist.clean_warehouse ? 1 : 0,
+        checklist.trash ? 1 : 0,
+        checklist.returns ? 1 : 0,
+        checklist.unshipped ? 1 : 0,
+        checklist.equipment ? 1 : 0,
+        checklist.consumables ? 1 : 0
+      ].join('');
+
+      const shiftData = {
+        worker: user?.first_name || "Сотрудник",
+        time: new Date().toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' }),
+        bc: parseInt(barcodesInput, 10) || 0,
+        lost: parseInt(lostInput, 10) || 0,
+        comm: commVal || "Без замечаний",
+        accepted: false
+      };
+
+      // Сохраняем локально, чтобы вкладка "Принять" сразу обновилась
+      localStorage.setItem('last_submitted_shift', JSON.stringify(shiftData));
+
+      // Визуальный отклик
+      btn.textContent = "⏳ Отправка в бота...";
+      btn.style.opacity = "0.7";
 
       const payload = {
-        act: "handover",
-        lost: parseInt(lostInput, 10) || 0,
-        bc: parseInt(barcodesInput, 10) || 0,
-        cl: {
-          "Уборка (клиент)": checklist.clean_client ? "Да" : "Нет",
-          "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
-          "Мусор": checklist.trash ? "Да" : "Нет",
-          "Возвраты": checklist.returns ? "Да" : "Нет",
-          "Неотправленные": checklist.unshipped ? "Да" : "Нет",
-          "Оборудование": checklist.equipment ? "Да" : "Нет",
-          "Расходники": checklist.consumables ? "Да" : "Нет"
-        },
-        comm: document.getElementById('comments').value.trim() || "Без замечаний"
+        act: "h",
+        l: shiftData.lost,
+        b: shiftData.bc,
+        c: clBits,
+        m: commVal.substring(0, 20)
       };
 
       sendPayloadViaLink(payload);
+
+      setTimeout(() => {
+        btn.textContent = "✅ Смена отправлена!";
+        btn.style.background = "var(--success)";
+      }, 500);
     }
 
-   // ЗАМЕНИТЬ существующую submitSchedule:
+    // 2. ОТПРАВКА ГРАФИКА
     function submitSchedule() {
+      const btn = event.target;
       if (selectedCalendarSlots.length === 0) {
         alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
         return;
       }
 
-      // 1. Сохраняем новые даты в память браузера
       localStorage.setItem('my_approved_days', JSON.stringify(selectedCalendarSlots));
       renderApprovedScheduleCard();
 
-      // 2. Отправляем в Telegram
       const weekDates = getWeekDates(currentWeekOffset);
       const daysIdx = [];
       weekDates.forEach((d, idx) => {
         const key = d.toISOString().split('T')[0];
         if (selectedCalendarSlots.includes(key)) daysIdx.push(idx);
       });
+
+      btn.textContent = "⏳ Отправка на согласование...";
 
       const payload = {
         act: "sched",
@@ -461,9 +492,14 @@
       };
 
       sendPayloadViaLink(payload);
+
+      setTimeout(() => {
+        btn.textContent = "✅ График направлен!";
+        closeScheduleEditor();
+      }, 500);
     }
 
-    // 3. Функции вкладки "Принять"
+    // 3. ПРИЁМКА СМЕНЫ
     function toggleIssuesBlock() {
       const block = document.getElementById('issue-input-block');
       block.style.display = (block.style.display === 'none' || !block.style.display) ? 'block' : 'none';
@@ -477,11 +513,19 @@
           alert('Опишите выявленные замечания перед отправкой!');
           return;
         }
-        issueComment = text.substring(0, 30); // Ограничиваем длину для deep-link
+        issueComment = text.substring(0, 25);
       }
 
-      // Сверхкомпактный payload (укладывается в 20 символов):
-      // st: 1 (OK), st: 0 (замечания)
+      // Обновляем статус в карточке на экране
+      const rawData = localStorage.getItem('last_submitted_shift');
+      if (rawData) {
+        const shift = JSON.parse(rawData);
+        shift.accepted = true;
+        shift.accepted_status = hasIssues ? "Принято с замечаниями" : "Принято без замечаний";
+        localStorage.setItem('last_submitted_shift', JSON.stringify(shift));
+      }
+      renderTakeoverCard();
+
       const payload = {
         act: "to",
         st: hasIssues ? 0 : 1,
@@ -491,35 +535,64 @@
       sendPayloadViaLink(payload);
     }
 
-// --- Отрисовка согласованного графика из памяти браузера ---
+    // Отрисовка карточки приёмщика
+    function renderTakeoverCard() {
+      const rawData = localStorage.getItem('last_submitted_shift');
+      const workerEl = document.getElementById('to-worker-name');
+      const timeEl = document.getElementById('to-time-str');
+      const bcEl = document.getElementById('to-barcodes-val');
+      const lostEl = document.getElementById('to-lost-val');
+      const commEl = document.getElementById('to-comments-val');
+      const statusBadge = document.getElementById('to-status-badge');
+      const actionsBlock = document.getElementById('takeover-actions-block');
+
+      if (!rawData) return;
+
+      const shift = JSON.parse(rawData);
+      if (workerEl) workerEl.textContent = shift.worker || "Сотрудник";
+      if (timeEl) timeEl.textContent = `Сегодня, ${shift.time}`;
+      if (bcEl) bcEl.textContent = shift.bc || "0";
+      if (lostEl) lostEl.textContent = shift.lost || "0";
+      if (commEl) commEl.textContent = shift.comm || "Без замечаний";
+
+      if (shift.accepted) {
+        if (statusBadge) {
+          statusBadge.textContent = '✅ ' + shift.accepted_status;
+          statusBadge.style.color = 'var(--success)';
+        }
+        if (actionsBlock) actionsBlock.style.display = 'none';
+      } else {
+        if (statusBadge) {
+          statusBadge.textContent = 'Статус: ⏳ Ожидает приёмки';
+          statusBadge.style.color = '#d97706';
+        }
+        if (actionsBlock) actionsBlock.style.display = 'block';
+      }
+    }
+
+    // Отрисовка карточки графика
     function renderApprovedScheduleCard() {
       const container = document.getElementById('approved-days-container');
       if (!container) return;
 
-      // Считываем сохраненные дни из памяти (по умолчанию Ср, Сб, Вс)
       const savedDays = JSON.parse(localStorage.getItem('my_approved_days') || '["2026-10-07", "2026-10-10", "2026-10-11"]');
-      
       const dayNames = {
         "2026-10-05": "Пн (05.10)", "2026-10-06": "Вт (06.10)", "2026-10-07": "Ср (07.10)",
         "2026-10-08": "Чт (08.10)", "2026-10-09": "Пт (09.10)", "2026-10-10": "Сб (10.10)", "2026-10-11": "Вс (11.10)"
       };
 
       container.innerHTML = '';
-      if (savedDays.length === 0) {
-        container.innerHTML = '<div><i>Нет назначенных смен на эту неделю</i></div>';
-      } else {
-        savedDays.forEach(dateStr => {
-          const title = dayNames[dateStr] || dateStr;
-          const row = document.createElement('div');
-          row.innerHTML = `🟢 <b>${title}</b> — Смена (12 ч)`;
-          container.appendChild(row);
-        });
-      }
+      savedDays.forEach(dateStr => {
+        const title = dayNames[dateStr] || dateStr;
+        const row = document.createElement('div');
+        row.innerHTML = `🟢 <b>${title}</b> — Смена (12 ч)`;
+        container.appendChild(row);
+      });
     }
 
-    // Запуск первичной отрисовки при открытии приложения
     renderCalendar();
     renderApprovedScheduleCard();
+    renderTakeoverCard();
   </script>
 </body>
 </html>
