@@ -288,33 +288,46 @@
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    try {
+      tg.ready();
+      tg.expand();
+    } catch (e) {
+      console.warn("Telegram WebApp не инициализирован", e);
+    }
 
-    // 1. Splash Screen
+    // 1. Гарантированное скрытие Splash Screen (чтобы не блокировал клики)
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const splash = document.getElementById('splash');
-        if (splash) splash.style.display = 'none';
-      }, 500);
+        if (splash) {
+          splash.style.opacity = '0';
+          splash.style.pointerEvents = 'none'; // Снимает блокировку кликов
+          setTimeout(() => splash.style.display = 'none', 300);
+        }
+      }, 400);
       renderCalendar();
     });
 
-    // 2. Инициализация профиля
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-      document.getElementById('user-name').textContent = user.first_name || "Сотрудник";
-      document.getElementById('avatar').textContent = (user.first_name || "П")[0].toUpperCase();
+    // 2. Инициализация профиля и даты
+    try {
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        document.getElementById('user-name').textContent = user.first_name || "Сотрудник";
+        document.getElementById('avatar').textContent = (user.first_name || "П")[0].toUpperCase();
+      }
+      const today = new Date();
+      document.getElementById('current-date').textContent = today.toLocaleDateString("ru-RU", { day: 'numeric', month: 'numeric' });
+    } catch (err) {
+      console.error(err);
     }
-    const today = new Date();
-    document.getElementById('current-date').textContent = today.toLocaleDateString("ru-RU", { day: 'numeric', month: 'numeric' });
 
-    // 3. Переключение вкладок
+    // 3. Навигация по вкладкам
     function switchTab(tabName, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tabName).classList.add('active');
-      btn.classList.add('active');
+      const targetTab = document.getElementById('tab-' + tabName);
+      if (targetTab) targetTab.classList.add('active');
+      if (btn) btn.classList.add('active');
     }
 
     // 4. Тумблеры чек-листа
@@ -331,15 +344,17 @@
       btn.classList.add(val ? 'active-yes' : 'active-no');
     }
 
-    // 5. Встроенный календарь
+    // 5. Календарь
     const RU_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
     let currentWeekOffset = 1;
     let selectedCalendarSlots = [];
 
     function changeWeek(offset) {
       currentWeekOffset = offset;
-      document.getElementById('btn-week-1').classList.toggle('active', offset === 1);
-      document.getElementById('btn-week-2').classList.toggle('active', offset === 2);
+      const b1 = document.getElementById('btn-week-1');
+      const b2 = document.getElementById('btn-week-2');
+      if (b1) b1.classList.toggle('active', offset === 1);
+      if (b2) b2.classList.toggle('active', offset === 2);
       selectedCalendarSlots = [];
       renderCalendar();
     }
@@ -361,6 +376,7 @@
 
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
+      if (!grid) return;
       grid.innerHTML = '';
       const dates = getWeekDates(currentWeekOffset);
 
@@ -388,58 +404,71 @@
       });
     }
 
-    // 6. Отправка отчета (БЕЗ блокирующих диалогов)
-function submitHandover() {
-      const lostInput = document.getElementById('lost-items').value.trim();
-      const barcodesInput = document.getElementById('barcodes-count').value.trim();
+    // 6. Безопасная отправка сдачи смены
+    function submitHandover() {
+      try {
+        const lostEl = document.getElementById('lost-items');
+        const barcodesEl = document.getElementById('barcodes-count');
+        const commentsEl = document.getElementById('comments');
 
-      if (lostInput === '' || parseInt(lostInput, 10) < 0) {
-        tg.showAlert('Укажите число потеряшек (0 допускается).');
-        return;
+        const lostVal = lostEl ? lostEl.value.trim() : "0";
+        const barcodesVal = barcodesEl ? barcodesEl.value.trim() : "0";
+        const commentsVal = commentsEl ? commentsEl.value.trim() : "Без замечаний";
+
+        if (lostVal === '' || parseInt(lostVal, 10) < 0) {
+          tg.showAlert('Укажите число потеряшек (0 допускается).');
+          return;
+        }
+
+        const payload = {
+          action: "handover_submit",
+          lost_items_count: parseInt(lostVal, 10),
+          barcodes_count: parseInt(barcodesVal, 10) || 0,
+          checklist: {
+            "Уборка (клиентская)": checklist.clean_client ? "Да" : "Нет",
+            "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
+            "Вынос мусора": checklist.trash ? "Да" : "Нет",
+            "Неоформл. возвраты": checklist.returns ? "Да" : "Нет",
+            "Неотправл. заказы": checklist.unshipped ? "Да" : "Нет",
+            "Оборудование": checklist.equipment ? "Да" : "Нет",
+            "Расходники": checklist.consumables ? "Да" : "Нет"
+          },
+          comments: commentsVal || "Без замечаний"
+        };
+
+        tg.sendData(JSON.stringify(payload));
+      } catch (err) {
+        alert("Ошибка при отправке: " + err.message);
       }
-      if (barcodesInput === '' || parseInt(barcodesInput, 10) < 0) {
-        tg.showAlert('Укажите количество принятых ШК (0 допускается).');
-        return;
-      }
-
-      const payload = {
-        action: "handover_submit",
-        lost_items_count: parseInt(lostInput, 10),
-        barcodes_count: parseInt(barcodesInput, 10),
-        checklist: {
-          "Уборка (клиентская)": checklist.clean_client ? "Да" : "Нет",
-          "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
-          "Вынос мусора": checklist.trash ? "Да" : "Нет",
-          "Неоформл. возвраты": checklist.returns ? "Да" : "Нет",
-          "Неотправл. заказы": checklist.unshipped ? "Да" : "Нет",
-          "Оборудование": checklist.equipment ? "Да" : "Нет",
-          "Расходники": checklist.consumables ? "Да" : "Нет"
-        },
-        comments: document.getElementById('comments').value.trim() || "Без замечаний"
-      };
-
-      tg.sendData(JSON.stringify(payload));
     }
 
-    // 7. Отправка расписания
+    // 7. Безопасная отправка расписания
     function submitSchedule() {
-      if (selectedCalendarSlots.length === 0) {
-        tg.showAlert('Пожалуйста, выберите хотя бы один день для смены!');
-        return;
+      try {
+        if (!selectedCalendarSlots || selectedCalendarSlots.length === 0) {
+          tg.showAlert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
+          return;
+        }
+
+        const payload = {
+          action: "schedule_submit",
+          week_offset: currentWeekOffset,
+          selected_slots: selectedCalendarSlots
+        };
+
+        tg.sendData(JSON.stringify(payload));
+      } catch (err) {
+        alert("Ошибка отправки расписания: " + err.message);
       }
-
-      const payload = {
-        action: "schedule_submit",
-        week_offset: currentWeekOffset,
-        selected_slots: selectedCalendarSlots
-      };
-
-      tg.sendData(JSON.stringify(payload));
     }
 
-    // 8. Переход к приемке смены
+    // 8. Запрос приемки смены
     function requestTakeover() {
-      tg.sendData(JSON.stringify({ action: "command", command: "/takeover" }));
+      try {
+        tg.sendData(JSON.stringify({ action: "command", command: "/takeover" }));
+      } catch (err) {
+        alert("Ошибка перехода: " + err.message);
+      }
     }
   </script>
 </body>
