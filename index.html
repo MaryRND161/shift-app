@@ -470,20 +470,22 @@
     }
 
     function confirmTakeover(hasIssues) {
-      let issueComment = "—";
+      let issueComment = "";
       if (hasIssues) {
         const text = document.getElementById('issue-text').value.trim();
         if (!text) {
           alert('Опишите выявленные замечания перед отправкой!');
           return;
         }
-        issueComment = text;
+        issueComment = text.substring(0, 30); // Ограничиваем длину для deep-link
       }
 
+      // Сверхкомпактный payload (укладывается в 20 символов):
+      // st: 1 (OK), st: 0 (замечания)
       const payload = {
-        act: "takeover_submit",
-        status: hasIssues ? "Принято с замечаниями" : "Принято без замечаний",
-        issues: issueComment
+        act: "to",
+        st: hasIssues ? 0 : 1,
+        iss: issueComment
       };
 
       sendPayloadViaLink(payload);
