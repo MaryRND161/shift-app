@@ -436,11 +436,11 @@
     }
 
     // 1. СДАЧА СМЕНЫ
-   function submitHandover(btn) {
+  function submitHandover(btn) {
       if (!btn) btn = document.getElementById('btn-submit-shift') || document.querySelector('#tab-handover .action-btn');
 
       if (!photoAttached) {
-        alert('⚠️ Пожалуйста, прикрепите фото рабочей зоны перед сдачей смены!');
+        alert('⚠️ Сначала сделайте и прикрепите фото рабочей зоны!');
         return;
       }
 
@@ -462,44 +462,37 @@
         checklist.consumables ? 1 : 0
       ].join('');
 
-      // Компактный payload: гарантированно умещается в лимит ссылки (до 30 символов)
-      const payload = {
-        act: "h",
-        l: lostVal,
-        b: barcodesVal,
-        c: clBits,
-        m: commText.substring(0, 20)
-      };
+      // Формируем ультра-короткую строку параметров через дефис:
+      // h-Потеряшки-ШК-Битмаска
+      // Пример: h-0-150-1110011 (длина всего 15 символов!)
+      const rawPayload = `h_${lostVal}_${barcodesVal}_${clBits}`;
 
-      const jsonStr = JSON.stringify(payload);
-      
-      // Сверхкомпактное кодирование в base64
-      const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
-        return String.fromCharCode('0x' + p1);
-      })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-      // 1. Попытка через sendData (для клавиатурных кнопок)
-      let sentViaNative = false;
+      // Сохраняем в память для второй вкладки
       try {
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) {
-          window.Telegram.WebApp.sendData(jsonStr);
-          sentViaNative = true;
-        }
-      } catch (e) {
-        sentViaNative = false;
-      }
+        localStorage.setItem('last_submitted_shift', JSON.stringify({
+          worker: user?.first_name || "Марина",
+          time: new Date().toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' }),
+          bc: barcodesVal,
+          lost: lostVal,
+          comm: commText,
+          accepted: false
+        }));
+      } catch (e) {}
 
-      // 2. Если sendData не поддерживается в этом режиме — перенаправляем через ссылку и закрываем окно
-      if (!sentViaNative) {
-        const link = `https://t.me/${BOT_USERNAME}?start=d_${b64}`;
+      // Прямой переход по ссылке в бота с коротким параметром
+      const targetUrl = `https://t.me/${BOT_USERNAME}?start=${rawPayload}`;
+
+      try {
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-          window.Telegram.WebApp.openTelegramLink(link);
+          window.Telegram.WebApp.openTelegramLink(targetUrl);
         } else {
-          window.location.href = link;
+          window.location.href = targetUrl;
         }
+      } catch (err) {
+        window.location.href = targetUrl;
       }
 
-      // Принудительно закрываем окно Mini App
+      // Закрываем окно веб-приложения
       try {
         window.Telegram.WebApp.close();
       } catch (e) {}
