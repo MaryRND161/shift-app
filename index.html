@@ -184,7 +184,7 @@
       <textarea id="comments" placeholder="Опишите проблемы за смену или оставьте 'Без замечаний'..."></textarea>
     </div>
 
-    <button type="button" class="action-btn" onclick="submitHandover()">Отправить смену</button>
+ <button type="button" id="btn-submit-shift" class="action-btn" onclick="submitHandover(this)">Отправить смену</button>
   </main>
 
 <!-- ВКЛАДКА 2: ПРИНЯТЬ СМЕНУ -->
@@ -436,21 +436,23 @@
     }
 
     // 1. СДАЧА СМЕНЫ
-    function submitHandover() {
-      const btn = event?.target || document.querySelector('#tab-handover .action-btn');
+    function submitHandover(btn) {
+      if (!btn) btn = document.getElementById('btn-submit-shift');
 
+      // 1. Проверяем фото
       if (!photoAttached) {
-        alert('⚠️ Сначала сделайте и прикрепите фото рабочей зоны!');
+        alert('⚠️ Пожалуйста, прикрепите фото рабочей зоны перед сдачей смены!');
         return;
       }
 
+      // 2. Считываем поля
       const lostInput = document.getElementById('lost-items');
       const barcodesInput = document.getElementById('barcodes-count');
       const commentsInput = document.getElementById('comments');
 
       const lostVal = lostInput ? (parseInt(lostInput.value, 10) || 0) : 0;
       const barcodesVal = barcodesInput ? (parseInt(barcodesInput.value, 10) || 0) : 0;
-      const commText = commentsInput ? commentsInput.value.trim() : "";
+      const commText = commentsInput && commentsInput.value.trim() ? commentsInput.value.trim() : "Без замечаний";
 
       const clBits = [
         checklist.clean_client ? 1 : 0,
@@ -467,36 +469,48 @@
         time: new Date().toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' }),
         bc: barcodesVal,
         lost: lostVal,
-        comm: commText || "Без замечаний",
+        comm: commText,
         accepted: false
       };
 
-      // Сохраняем в localStorage для вкладки "Принять"
-      localStorage.setItem('last_submitted_shift', JSON.stringify(shiftData));
+      try {
+        localStorage.setItem('last_submitted_shift', JSON.stringify(shiftData));
+      } catch (e) {}
 
       if (btn) {
-        btn.textContent = "⏳ Отправка отчета...";
+        btn.textContent = "⏳ Отправка...";
         btn.style.opacity = "0.7";
       }
 
-      // Компактный payload: l = потеряшки, b = ШК, c = биты чек-листа, m = комментарий
       const payload = {
         act: "h",
         l: shiftData.lost,
         b: shiftData.bc,
         c: clBits,
-        m: commText.substring(0, 30) || "Без замечаний"
+        m: commText
       };
 
-      sendUniversalPayload(payload);
+      const jsonStr = JSON.stringify(payload);
 
-      setTimeout(() => {
-        if (btn) {
-          btn.textContent = "✅ Смена отправлена!";
-          btn.style.background = "var(--success)";
-          btn.style.opacity = "1";
+      // Способ 1: Прямая отправка в бот через Telegram WebApp API
+      try {
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) {
+          window.Telegram.WebApp.sendData(jsonStr);
+          return;
         }
-      }, 400);
+      } catch (err) {
+        console.error("sendData failure", err);
+      }
+
+      // Способ 2: Запасной переход через deep-link, если sendData заблокирован
+      try {
+        const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+          return String.fromCharCode('0x' + p1);
+        })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        window.location.href = `https://t.me/${BOT_USERNAME}?start=d_${b64}`;
+      } catch (e) {
+        alert("Ошибка отправки данных: " + e.message);
+      }
     }
 
     // 2. ОТПРАВКА ГРАФИКА
