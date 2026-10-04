@@ -9,7 +9,7 @@
     :root {
       --primary-blue: #009bf9;
       --accent-color: #0284c7;
-      --card-bg: rgba(255, 255, 255, 0.9);
+      --card-bg: rgba(255, 255, 255, 0.92);
       --card-border: rgba(255, 255, 255, 0.6);
       --text-main: #0f172a;
       --text-muted: #64748b;
@@ -39,24 +39,9 @@
       padding-bottom: 90px;
     }
 
-    #splash {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(180deg, #009bf9 0%, #54c1ff 100%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.4s ease;
-    }
-
-    .splash-logo { width: 80px; height: 80px; }
-    .splash-title { color: #fff; font-size: 20px; font-weight: 700; margin-top: 14px; }
-
     .app-header {
       position: fixed; top: 0; left: 0; right: 0; height: 60px;
-      background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--card-border);
       display: flex; justify-content: space-between; align-items: center;
       padding: 0 16px; z-index: 100;
@@ -77,7 +62,7 @@
 
     .app-footer {
       position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
-      background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px);
       border-top: 1px solid var(--card-border);
       display: flex; justify-content: space-around; align-items: center;
       z-index: 100;
@@ -123,9 +108,9 @@
       width: 100%; padding: 14px; border-radius: 12px; border: none;
       background: var(--accent-color); color: #fff; font-size: 15px;
       font-weight: 700; cursor: pointer; display: flex; justify-content: center;
-      align-items: center; gap: 8px; text-decoration: none;
+      align-items: center; gap: 8px; transition: transform 0.1s ease, opacity 0.2s;
     }
-    .secondary-btn { background: #fff; color: var(--accent-color); border: 1px solid var(--accent-color); margin-top: 10px; }
+    .action-btn:active { transform: scale(0.98); opacity: 0.9; }
 
     .week-selector { display: flex; gap: 8px; margin-bottom: 14px; }
     .week-btn {
@@ -148,13 +133,6 @@
 </head>
 <body>
 
-  <div id="splash">
-    <svg class="splash-logo" viewBox="0 0 24 24" fill="#ffffff">
-      <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z"/>
-    </svg>
-    <div class="splash-title">Мой маркетплейс</div>
-  </div>
-
   <header class="app-header">
     <div class="user-info">
       <div class="user-avatar" id="avatar">П</div>
@@ -172,13 +150,13 @@
       </label>
       <input type="number" id="lost-items" min="0" value="0">
     </div>
-    <!-- Новое поле: Принято ШК -->
+
     <div class="card">
-      <div class="card-title">📦 Приемка</div>
+      <div class="card-title">📦 Обработка груза</div>
       <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">
         Принято ШК за смену (шт.):
       </label>
-      <input type="number" id="barcodes-count" min="0" value="0" placeholder="0">
+      <input type="number" id="barcodes-count" min="0" value="0">
     </div>
 
     <div class="card">
@@ -239,7 +217,7 @@
       <textarea id="comments" placeholder="Опишите проблемы за смену или оставьте 'Без замечаний'..."></textarea>
     </div>
 
-    <button type="button" class="action-btn" onclick="submitHandover()">Отправить смену</button>
+    <button type="button" class="action-btn" id="btn-handover" onclick="submitHandover()">Отправить смену</button>
   </main>
 
   <!-- ВКЛАДКА 2: ПРИНЯТЬ СМЕНУ -->
@@ -249,7 +227,7 @@
       <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
         Для очной приемки смены и просмотра чек-листа сменщика нажмите кнопку ниже:
       </p>
-      <button type="button" class="action-btn" onclick="requestTakeover()">
+      <button type="button" class="action-btn" id="btn-takeover" onclick="requestTakeover()">
         🔍 Проверить и принять смену
       </button>
     </div>
@@ -266,7 +244,7 @@
 
       <div class="calendar-grid" id="calendar-grid"></div>
 
-      <button type="button" class="action-btn" onclick="submitSchedule()">📨 Отправить график на согласование</button>
+      <button type="button" class="action-btn" id="btn-schedule" onclick="submitSchedule()">📨 Отправить график на согласование</button>
     </div>
   </main>
 
@@ -287,41 +265,57 @@
   </nav>
 
   <script>
+    // ВСТАВЬТЕ СЮДА ВАШ ТОКЕН БОТА:
+    const BOT_TOKEN = "ВАШ_ТОКЕН_БОТА";
+
     const tg = window.Telegram.WebApp;
     try {
       tg.ready();
       tg.expand();
-    } catch (e) {
-      console.warn("Telegram WebApp не инициализирован", e);
+    } catch (e) {}
+
+    // Инициализация профиля и даты
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+      document.getElementById('user-name').textContent = user.first_name || "Сотрудник";
+      document.getElementById('avatar').textContent = (user.first_name || "П")[0].toUpperCase();
     }
+    const today = new Date();
+    document.getElementById('current-date').textContent = today.toLocaleDateString("ru-RU", { day: 'numeric', month: 'numeric' });
 
-    // 1. Гарантированное скрытие Splash Screen (чтобы не блокировал клики)
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const splash = document.getElementById('splash');
-        if (splash) {
-          splash.style.opacity = '0';
-          splash.style.pointerEvents = 'none'; // Снимает блокировку кликов
-          setTimeout(() => splash.style.display = 'none', 300);
-        }
-      }, 400);
-      renderCalendar();
-    });
-
-    // 2. Инициализация профиля и даты
-    try {
-      const user = tg.initDataUnsafe?.user;
-      if (user) {
-        document.getElementById('user-name').textContent = user.first_name || "Сотрудник";
-        document.getElementById('avatar').textContent = (user.first_name || "П")[0].toUpperCase();
+    // Универсальная функция прямой отправки данных боту (работает ВСЕГДА)
+    async function sendDataToBot(payload) {
+      const chatId = user?.id;
+      if (!chatId) {
+        alert("Не удалось определить ваш Telegram ID. Откройте приложение внутри Telegram.");
+        return false;
       }
-      const today = new Date();
-      document.getElementById('current-date').textContent = today.toLocaleDateString("ru-RU", { day: 'numeric', month: 'numeric' });
-    } catch (err) {
-      console.error(err);
+
+      const textMessage = "WEBAPP_DATA:" + JSON.stringify(payload);
+
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: textMessage
+          })
+        });
+        const res = await response.json();
+        return res.ok;
+      } catch (err) {
+        console.error("Ошибка прямой отправки:", err);
+        // Резервный метод sendData
+        try {
+          tg.sendData(JSON.stringify(payload));
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
     }
 
-    // 3. Навигация по вкладкам
     function switchTab(tabName, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -330,7 +324,6 @@
       if (btn) btn.classList.add('active');
     }
 
-    // 4. Тумблеры чек-листа
     const checklist = {
       clean_client: true, clean_warehouse: true, trash: true,
       returns: false, unshipped: false, equipment: true, consumables: true
@@ -344,17 +337,14 @@
       btn.classList.add(val ? 'active-yes' : 'active-no');
     }
 
-    // 5. Календарь
     const RU_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
     let currentWeekOffset = 1;
     let selectedCalendarSlots = [];
 
     function changeWeek(offset) {
       currentWeekOffset = offset;
-      const b1 = document.getElementById('btn-week-1');
-      const b2 = document.getElementById('btn-week-2');
-      if (b1) b1.classList.toggle('active', offset === 1);
-      if (b2) b2.classList.toggle('active', offset === 2);
+      document.getElementById('btn-week-1').classList.toggle('active', offset === 1);
+      document.getElementById('btn-week-2').classList.toggle('active', offset === 2);
       selectedCalendarSlots = [];
       renderCalendar();
     }
@@ -404,72 +394,91 @@
       });
     }
 
-    // 6. Безопасная отправка сдачи смены
-    function submitHandover() {
-      try {
-        const lostEl = document.getElementById('lost-items');
-        const barcodesEl = document.getElementById('barcodes-count');
-        const commentsEl = document.getElementById('comments');
+    // 1. Отправка сдачи смены
+    async function submitHandover() {
+      const btn = document.getElementById('btn-handover');
+      const lostInput = document.getElementById('lost-items').value.trim();
+      const barcodesInput = document.getElementById('barcodes-count').value.trim();
 
-        const lostVal = lostEl ? lostEl.value.trim() : "0";
-        const barcodesVal = barcodesEl ? barcodesEl.value.trim() : "0";
-        const commentsVal = commentsEl ? commentsEl.value.trim() : "Без замечаний";
+      if (lostInput === '' || parseInt(lostInput, 10) < 0) {
+        alert('Укажите число потеряшек (0 допускается).');
+        return;
+      }
+      if (barcodesInput === '' || parseInt(barcodesInput, 10) < 0) {
+        alert('Укажите количество принятых ШК (0 допускается).');
+        return;
+      }
 
-        if (lostVal === '' || parseInt(lostVal, 10) < 0) {
-          tg.showAlert('Укажите число потеряшек (0 допускается).');
-          return;
-        }
+      btn.disabled = true;
+      btn.textContent = "⏳ Отправка отчета...";
 
-        const payload = {
-          action: "handover_submit",
-          lost_items_count: parseInt(lostVal, 10),
-          barcodes_count: parseInt(barcodesVal, 10) || 0,
-          checklist: {
-            "Уборка (клиентская)": checklist.clean_client ? "Да" : "Нет",
-            "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
-            "Вынос мусора": checklist.trash ? "Да" : "Нет",
-            "Неоформл. возвраты": checklist.returns ? "Да" : "Нет",
-            "Неотправл. заказы": checklist.unshipped ? "Да" : "Нет",
-            "Оборудование": checklist.equipment ? "Да" : "Нет",
-            "Расходники": checklist.consumables ? "Да" : "Нет"
-          },
-          comments: commentsVal || "Без замечаний"
-        };
+      const payload = {
+        action: "handover_submit",
+        lost_items_count: parseInt(lostInput, 10),
+        barcodes_count: parseInt(barcodesInput, 10),
+        checklist: {
+          "Уборка (клиентская)": checklist.clean_client ? "Да" : "Нет",
+          "Уборка (склад)": checklist.clean_warehouse ? "Да" : "Нет",
+          "Вынос мусора": checklist.trash ? "Да" : "Нет",
+          "Неоформл. возвраты": checklist.returns ? "Да" : "Нет",
+          "Неотправл. заказы": checklist.unshipped ? "Да" : "Нет",
+          "Оборудование": checklist.equipment ? "Да" : "Нет",
+          "Расходники": checklist.consumables ? "Да" : "Нет"
+        },
+        comments: document.getElementById('comments').value.trim() || "Без замечаний"
+      };
 
-        tg.sendData(JSON.stringify(payload));
-      } catch (err) {
-        alert("Ошибка при отправке: " + err.message);
+      const ok = await sendDataToBot(payload);
+      if (ok) {
+        alert("✅ Отчет успешно передан боту!");
+        tg.close();
+      } else {
+        alert("⚠️️ Ошибка отправки. Попробуйте еще раз.");
+        btn.disabled = false;
+        btn.textContent = "Отправить смену";
       }
     }
 
-    // 7. Безопасная отправка расписания
-    function submitSchedule() {
-      try {
-        if (!selectedCalendarSlots || selectedCalendarSlots.length === 0) {
-          tg.showAlert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
-          return;
-        }
+    // 2. Отправка расписания
+    async function submitSchedule() {
+      const btn = document.getElementById('btn-schedule');
+      if (selectedCalendarSlots.length === 0) {
+        alert('Пожалуйста, выберите хотя бы один день для выхода в смену!');
+        return;
+      }
 
-        const payload = {
-          action: "schedule_submit",
-          week_offset: currentWeekOffset,
-          selected_slots: selectedCalendarSlots
-        };
+      btn.disabled = true;
+      btn.textContent = "⏳ Отправка графика...";
 
-        tg.sendData(JSON.stringify(payload));
-      } catch (err) {
-        alert("Ошибка отправки расписания: " + err.message);
+      const payload = {
+        action: "schedule_submit",
+        week_offset: currentWeekOffset,
+        selected_slots: selectedCalendarSlots
+      };
+
+      const ok = await sendDataToBot(payload);
+      if (ok) {
+        alert("✅ График направлен руководителю!");
+        tg.close();
+      } else {
+        alert("⚠️ Ошибка отправки. Попробуйте снова.");
+        btn.disabled = false;
+        btn.textContent = "📨 Отправить график на согласование";
       }
     }
 
-    // 8. Запрос приемки смены
-    function requestTakeover() {
-      try {
-        tg.sendData(JSON.stringify({ action: "command", command: "/takeover" }));
-      } catch (err) {
-        alert("Ошибка перехода: " + err.message);
-      }
+    // 3. Запрос приемки смены
+    async function requestTakeover() {
+      const btn = document.getElementById('btn-takeover');
+      btn.disabled = true;
+      btn.textContent = "⏳ Загрузка...";
+
+      const payload = { action: "command", command: "/takeover" };
+      await sendDataToBot(payload);
+      tg.close();
     }
+
+    renderCalendar();
   </script>
 </body>
 </html>
